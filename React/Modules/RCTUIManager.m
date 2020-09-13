@@ -8,7 +8,6 @@
 #import "RCTUIManager.h"
 
 #import <AVFoundation/AVFoundation.h>
-#import <React/RCTSurfacePresenterStub.h>
 
 #import "RCTAssert.h"
 #import "RCTBridge+Private.h"
@@ -355,11 +354,7 @@ static NSDictionary *deviceOrientationEventBody(UIDeviceOrientation orientation)
 - (UIView *)viewForReactTag:(NSNumber *)reactTag
 {
   RCTAssertMainQueue();
-  UIView *view = [_bridge.surfacePresenter findComponentViewWithTag_DO_NOT_USE_DEPRECATED:reactTag.integerValue];
-  if (!view) {
-    view = _viewRegistry[reactTag];
-  }
-  return view;
+  return _viewRegistry[reactTag];
 }
 
 - (RCTShadowView *)shadowViewForReactTag:(NSNumber *)reactTag
@@ -1444,8 +1439,7 @@ RCT_EXPORT_METHOD(setJSResponder
 {
   [self addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     _jsResponder = viewRegistry[reactTag];
-    // Fabric view's are not stored in viewRegistry. We avoid logging a warning in that case.
-    if (!_jsResponder && !RCTUIManagerTypeForTagIsFabric(reactTag)) {
+    if (!_jsResponder) {
       RCTLogWarn(@"Invalid view set to be the JS responder - tag %@", reactTag);
     }
   }];

@@ -40,9 +40,8 @@ public class ForwardingCookieHandler extends CookieHandler {
   private static final String VERSION_ONE_HEADER = "Set-cookie2";
   private static final String COOKIE_HEADER = "Cookie";
 
-  // As CookieManager was synchronous before API 21 this class emulates the async behavior on < 21.
-  private static final boolean USES_LEGACY_STORE =
-      Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+  // As CookieManager was synchronous before API 21 this class emulates the async behavior on <21.
+  private static final boolean USES_LEGACY_STORE = Build.VERSION.SDK_INT < 21;
 
   private final CookieSaver mCookieSaver;
   private final ReactContext mContext;
@@ -101,7 +100,6 @@ public class ForwardingCookieHandler extends CookieHandler {
     }
   }
 
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   private void clearCookiesAsync(final Callback callback) {
     CookieManager cookieManager = getCookieManager();
     if (cookieManager != null) {
@@ -150,7 +148,7 @@ public class ForwardingCookieHandler extends CookieHandler {
     }
   }
 
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+  @TargetApi(21)
   private void addCookieAsync(String url, String cookie) {
     CookieManager cookieManager = getCookieManager();
     if (cookieManager != null) {
@@ -268,7 +266,7 @@ public class ForwardingCookieHandler extends CookieHandler {
           });
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(21)
     private void flush() {
       CookieManager cookieManager = getCookieManager();
       if (cookieManager != null) {

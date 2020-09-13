@@ -36,7 +36,7 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig    = {
                                "USE_HEADERMAP" => "YES",
                                "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-                               "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/RCT-Folly\""
+                               "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/Folly\""
                              }
 
   s.dependency "FBReactNativeSpec", version

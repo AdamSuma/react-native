@@ -5,23 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#pragma once
-
-#import <memory>
-
 #import "RCTTurboModule.h"
-
-#import <ReactCommon/RuntimeExecutor.h>
 
 @protocol RCTTurboModuleManagerDelegate <NSObject>
 
 // TODO: Move to xplat codegen.
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
-                                                     initParams:
-                                                         (const facebook::react::ObjCTurboModule::InitParams &)params;
-@optional
-- (NSArray<NSString *> *)getEagerInitModuleNames;
-- (NSArray<NSString *> *)getEagerInitMainQueueModuleNames;
+                                                       instance:(id<RCTTurboModule>)instance
+                                                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+                                                  nativeInvoker:
+                                                      (std::shared_ptr<facebook::react::CallInvoker>)nativeInvoker
+                                                     perfLogger:(id<RCTTurboModulePerformanceLogger>)perfLogger;
 
 @optional
 
@@ -44,13 +38,18 @@
 
 @end
 
-@interface RCTTurboModuleManager : NSObject <RCTTurboModuleRegistry>
+@interface RCTTurboModuleManager : NSObject <RCTTurboModuleLookupDelegate>
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge
                       delegate:(id<RCTTurboModuleManagerDelegate>)delegate
                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker;
 
-- (void)installJSBindingWithRuntimeExecutor:(facebook::react::RuntimeExecutor)runtimeExecutor;
+- (instancetype)initWithBridge:(RCTBridge *)bridge
+                      delegate:(id<RCTTurboModuleManagerDelegate>)delegate
+                     jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+             performanceLogger:(id<RCTTurboModulePerformanceLogger>)performanceLogger;
+
+- (void)installJSBindingWithRuntime:(facebook::jsi::Runtime *)runtime;
 
 - (void)invalidate;
 

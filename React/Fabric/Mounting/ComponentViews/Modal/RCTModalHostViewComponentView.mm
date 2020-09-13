@@ -8,13 +8,13 @@
 #import "RCTModalHostViewComponentView.h"
 
 #import <React/UIView+React.h>
-#import <react/renderer/components/modal/ModalHostViewComponentDescriptor.h>
-#import <react/renderer/components/modal/ModalHostViewState.h>
-#import <react/renderer/components/rncore/EventEmitters.h>
-#import <react/renderer/components/rncore/Props.h>
+#import <react/components/modal/ModalHostViewComponentDescriptor.h>
+#import <react/components/modal/ModalHostViewState.h>
+#import <react/components/rncore/EventEmitters.h>
+#import <react/components/rncore/Props.h>
 
+#import "FBRCTFabricComponentsPlugins.h"
 #import "RCTConversions.h"
-
 #import "RCTFabricModalHostViewController.h"
 
 using namespace facebook::react;
@@ -100,7 +100,7 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 
 @implementation RCTModalHostViewComponentView {
   RCTFabricModalHostViewController *_viewController;
-  ModalHostViewShadowNode::ConcreteStateTeller _stateTeller;
+  ModalHostViewShadowNode::ConcreteState::Shared _state;
   BOOL _shouldAnimatePresentation;
   BOOL _isPresented;
 }
@@ -111,59 +111,39 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
     static const auto defaultProps = std::make_shared<const ModalHostViewProps>();
     _props = defaultProps;
     _shouldAnimatePresentation = YES;
-
+    _viewController = [RCTFabricModalHostViewController new];
+    _viewController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    _viewController.delegate = self;
     _isPresented = NO;
   }
 
   return self;
 }
 
-- (RCTFabricModalHostViewController *)viewController
-{
-  if (!_viewController) {
-    _viewController = [RCTFabricModalHostViewController new];
-    _viewController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-    _viewController.delegate = self;
-  }
-  return _viewController;
-}
-
-- (void)presentViewController:(UIViewController *)modalViewController
-                     animated:(BOOL)animated
-                   completion:(void (^)(void))completion
-{
-  UIViewController *controller = [self reactViewController];
-  [controller presentViewController:modalViewController animated:animated completion:completion];
-}
-
-- (void)dismissViewController:(UIViewController *)modalViewController animated:(BOOL)animated
-{
-  [modalViewController dismissViewControllerAnimated:animated completion:nil];
-}
-
 - (void)ensurePresentedOnlyIfNeeded
 {
   BOOL shouldBePresented = !_isPresented && self.window;
   if (shouldBePresented) {
+    UIViewController *controller = [self reactViewController];
     _isPresented = YES;
-    [self presentViewController:self.viewController
-                       animated:_shouldAnimatePresentation
-                     completion:^{
-                       if (!self->_eventEmitter) {
-                         return;
-                       }
+    return [controller
+        presentViewController:_viewController
+                     animated:_shouldAnimatePresentation
+                   completion:^{
+                     if (!self->_eventEmitter) {
+                       return;
+                     }
 
-                       assert(std::dynamic_pointer_cast<ModalHostViewEventEmitter const>(self->_eventEmitter));
-                       auto eventEmitter =
-                           std::static_pointer_cast<ModalHostViewEventEmitter const>(self->_eventEmitter);
-                       eventEmitter->onShow(ModalHostViewEventEmitter::OnShow{});
-                     }];
+                     assert(std::dynamic_pointer_cast<ModalHostViewEventEmitter const>(self->_eventEmitter));
+                     auto eventEmitter = std::static_pointer_cast<ModalHostViewEventEmitter const>(self->_eventEmitter);
+                     eventEmitter->onShow(ModalHostViewEventEmitter::OnShow{});
+                   }];
   }
 
   BOOL shouldBeHidden = _isPresented && !self.superview;
   if (shouldBeHidden) {
     _isPresented = NO;
-    [self dismissViewController:self.viewController animated:_shouldAnimatePresentation];
+    [_viewController dismissViewControllerAnimated:_shouldAnimatePresentation completion:nil];
   }
 }
 
@@ -190,8 +170,10 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
     eventEmitter->onOrientationChange(onOrientationChangeStruct(newBounds));
   }
 
-  auto newState = ModalHostViewState{RCTSizeFromCGSize(newBounds.size)};
-  _stateTeller.updateState(std::move(newState));
+  if (_state != nullptr) {
+    auto newState = ModalHostViewState{RCTSizeFromCGSize(newBounds.size)};
+    _state->updateState(std::move(newState));
+  }
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -204,8 +186,7 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 - (void)prepareForRecycle
 {
   [super prepareForRecycle];
-  _stateTeller.invalidate();
-  _viewController = nil;
+  _state.reset();
   _isPresented = NO;
 }
 
@@ -214,26 +195,27 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
   const auto &newProps = *std::static_pointer_cast<const ModalHostViewProps>(props);
 
 #if !TARGET_OS_TV
-  self.viewController.supportedInterfaceOrientations = supportedOrientationsMask(newProps.supportedOrientations);
+  _viewController.supportedInterfaceOrientations = supportedOrientationsMask(newProps.supportedOrientations);
 #endif
 
   std::tuple<BOOL, UIModalTransitionStyle> result = animationConfiguration(newProps.animationType);
   _shouldAnimatePresentation = std::get<0>(result);
-  self.viewController.modalTransitionStyle = std::get<1>(result);
+  _viewController.modalTransitionStyle = std::get<1>(result);
 
-  self.viewController.modalPresentationStyle = presentationConfiguration(newProps);
+  _viewController.modalPresentationStyle = presentationConfiguration(newProps);
 
   [super updateProps:props oldProps:oldProps];
 }
 
-- (void)updateState:(State::Shared const &)state oldState:(State::Shared const &)oldState
+- (void)updateState:(facebook::react::State::Shared const &)state
+           oldState:(facebook::react::State::Shared const &)oldState
 {
-  _stateTeller.setConcreteState(state);
+  _state = std::static_pointer_cast<const ModalHostViewShadowNode::ConcreteState>(state);
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  [self.viewController.view insertSubview:childComponentView atIndex:index];
+  [_viewController.view insertSubview:childComponentView atIndex:index];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
@@ -242,3 +224,8 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 }
 
 @end
+
+Class<RCTComponentViewProtocol> RCTModalHostViewCls(void)
+{
+  return RCTModalHostViewComponentView.class;
+}

@@ -32,15 +32,11 @@ struct JTurboModule : jni::JavaClass<JTurboModule> {
 
 class JSI_EXPORT JavaTurboModule : public TurboModule {
  public:
-  // TODO(T65603471): Should we unify this with a Fabric abstraction?
-  struct InitParams {
-    std::string moduleName;
-    jni::alias_ref<JTurboModule> instance;
-    std::shared_ptr<CallInvoker> jsInvoker;
-    std::shared_ptr<CallInvoker> nativeInvoker;
-  };
-
-  JavaTurboModule(const InitParams &params);
+  JavaTurboModule(
+      const std::string &name,
+      jni::alias_ref<JTurboModule> instance,
+      std::shared_ptr<CallInvoker> jsInvoker,
+      std::shared_ptr<CallInvoker> nativeInvoker);
   jsi::Value invokeJavaMethod(
       jsi::Runtime &runtime,
       TurboModuleMethodValueKind valueKind,
@@ -49,16 +45,9 @@ class JSI_EXPORT JavaTurboModule : public TurboModule {
       const jsi::Value *args,
       size_t argCount);
 
-  static void enablePromiseAsyncDispatch(bool enable);
-
  private:
   jni::global_ref<JTurboModule> instance_;
   std::shared_ptr<CallInvoker> nativeInvoker_;
-
-  /**
-   * Experiments
-   */
-  static bool isPromiseAsyncDispatchEnabled_;
 
   JNIArgs convertJSIArgsToJNIArgs(
       JNIEnv *env,

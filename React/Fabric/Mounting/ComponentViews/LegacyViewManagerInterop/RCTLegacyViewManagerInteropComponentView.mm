@@ -8,21 +8,18 @@
 #import "RCTLegacyViewManagerInteropComponentView.h"
 
 #import <React/UIView+React.h>
-#import <react/renderer/components/legacyviewmanagerinterop/LegacyViewManagerInteropComponentDescriptor.h>
-#import <react/renderer/components/legacyviewmanagerinterop/LegacyViewManagerInteropViewProps.h>
+#import <react/components/legacyviewmanagerinterop/LegacyViewManagerInteropComponentDescriptor.h>
+#import <react/components/legacyviewmanagerinterop/LegacyViewManagerInteropViewProps.h>
 #import <react/utils/ManagedObjectWrapper.h>
 #import "RCTLegacyViewManagerInteropCoordinatorAdapter.h"
 
 using namespace facebook::react;
 
-static NSString *const kRCTLegacyInteropChildComponentKey = @"childComponentView";
-static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
-
 @implementation RCTLegacyViewManagerInteropComponentView {
-  NSMutableArray<NSDictionary *> *_viewsToBeMounted;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewsToBeMounted;
   NSMutableArray<UIView *> *_viewsToBeUnmounted;
   RCTLegacyViewManagerInteropCoordinatorAdapter *_adapter;
-  LegacyViewManagerInteropShadowNode::ConcreteStateTeller _stateTeller;
+  LegacyViewManagerInteropShadowNode::ConcreteState::Shared _state;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -30,7 +27,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps = std::make_shared<const LegacyViewManagerInteropViewProps>();
     _props = defaultProps;
-    _viewsToBeMounted = [NSMutableArray new];
+    _viewsToBeMounted = [NSMutableDictionary new];
     _viewsToBeUnmounted = [NSMutableArray new];
   }
 
@@ -39,16 +36,8 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
 + (NSMutableSet<NSString *> *)supportedViewManagers
 {
-  static NSMutableSet<NSString *> *supported = [NSMutableSet setWithObjects:@"Picker",
-                                                                            @"DatePicker",
-                                                                            @"ProgressView",
-                                                                            @"SegmentedControl",
-                                                                            @"MaskedView",
-                                                                            @"ARTSurfaceView",
-                                                                            @"ARTText",
-                                                                            @"ARTShape",
-                                                                            @"ARTGroup",
-                                                                            nil];
+  static NSMutableSet<NSString *> *supported =
+      [NSMutableSet setWithObjects:@"Picker", @"DatePicker", @"ProgressView", @"SegmentedControl", @"MaskedView", nil];
   return supported;
 }
 
@@ -64,9 +53,9 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
 - (RCTLegacyViewManagerInteropCoordinator *)coordinator
 {
-  auto data = _stateTeller.getData();
-  if (data.hasValue()) {
-    return unwrapManagedObject(data.value().coordinator);
+  if (_state != nullptr) {
+    const auto &state = _state->getData();
+    return unwrapManagedObject(state.coordinator);
   } else {
     return nil;
   }
@@ -74,7 +63,9 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
 - (NSString *)componentViewName_DO_NOT_USE_THIS_IS_BROKEN
 {
-  return self.coordinator.componentViewName;
+  const auto &state = _state->getData();
+  RCTLegacyViewManagerInteropCoordinator *coordinator = unwrapManagedObject(state.coordinator);
+  return coordinator.componentViewName;
 }
 
 #pragma mark - RCTComponentViewProtocol
@@ -84,26 +75,18 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
   _adapter = nil;
   [_viewsToBeMounted removeAllObjects];
   [_viewsToBeUnmounted removeAllObjects];
-  _stateTeller.invalidate();
-  self.contentView = nil;
+  _state.reset();
   [super prepareForRecycle];
 }
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  [_viewsToBeMounted addObject:@{
-    kRCTLegacyInteropChildIndexKey : [NSNumber numberWithInteger:index],
-    kRCTLegacyInteropChildComponentKey : childComponentView
-  }];
+  [_viewsToBeMounted setObject:childComponentView forKey:[NSNumber numberWithInteger:index]];
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  if (_adapter) {
-    [_adapter.paperView removeReactSubview:childComponentView];
-  } else {
-    [_viewsToBeUnmounted addObject:childComponentView];
-  }
+  [_viewsToBeUnmounted addObject:childComponentView];
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -113,7 +96,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
 - (void)updateState:(State::Shared const &)state oldState:(State::Shared const &)oldState
 {
-  _stateTeller.setConcreteState(state);
+  _state = std::static_pointer_cast<LegacyViewManagerInteropShadowNode::ConcreteState const>(state);
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask
@@ -135,10 +118,8 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
     self.contentView = _adapter.paperView;
   }
 
-  for (NSDictionary *mountInstruction in _viewsToBeMounted) {
-    NSNumber *index = mountInstruction[kRCTLegacyInteropChildIndexKey];
-    UIView *childView = mountInstruction[kRCTLegacyInteropChildComponentKey];
-    [_adapter.paperView insertReactSubview:childView atIndex:index.integerValue];
+  for (NSNumber *key in _viewsToBeMounted) {
+    [_adapter.paperView insertReactSubview:_viewsToBeMounted[key] atIndex:key.integerValue];
   }
 
   [_viewsToBeMounted removeAllObjects];

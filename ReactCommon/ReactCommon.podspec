@@ -32,17 +32,16 @@ Pod::Spec.new do |s|
   s.source                 = source
   s.header_dir             = "ReactCommon" # Use global header_dir for all subspecs for use_frameworks! compatibility
   s.compiler_flags         = folly_compiler_flags + ' ' + boost_compiler_flags
-  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
+  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/Folly\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
                                "USE_HEADERMAP" => "YES",
                                "CLANG_CXX_LANGUAGE_STANDARD" => "c++14" }
 
   s.subspec "turbomodule" do |ss|
     ss.dependency "React-callinvoker", version
-    ss.dependency "React-perflogger", version
     ss.dependency "React-Core", version
     ss.dependency "React-cxxreact", version
     ss.dependency "React-jsi", version
-    ss.dependency "RCT-Folly", folly_version
+    ss.dependency "Folly", folly_version
     ss.dependency "DoubleConversion"
     ss.dependency "glog"
 

@@ -22,7 +22,6 @@
 #import "RCTDefines.h"
 #import "RCTLog.h"
 #import "RCTModuleData.h"
-#import "RCTReloadCommand.h"
 #import "RCTUIManager.h"
 #import "RCTUIManagerUtils.h"
 #import "RCTUtils.h"
@@ -379,7 +378,7 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
 
 + (void)reload
 {
-  RCTTriggerReloadCommandListeners(@"Profiling controls");
+  [RCTProfilingBridge() reloadWithReason:@"Profiling controls"];
 }
 
 + (void)toggle:(UIButton *)target

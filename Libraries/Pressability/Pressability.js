@@ -276,7 +276,8 @@ const isPressInSignal = signal =>
 const isTerminalSignal = signal =>
   signal === 'RESPONDER_TERMINATED' || signal === 'RESPONDER_RELEASE';
 
-const DEFAULT_LONG_PRESS_DELAY_MS = 500;
+const DEFAULT_LONG_PRESS_DELAY_MS = 370; // 500 - 130
+const DEFAULT_PRESS_DELAY_MS = 130;
 const DEFAULT_PRESS_RECT_OFFSETS = {
   bottom: 30,
   left: 20,
@@ -418,10 +419,6 @@ export default class Pressability {
     this._cancelLongPressDelayTimeout();
     this._cancelPressDelayTimeout();
     this._cancelPressOutDelayTimeout();
-
-    // Ensure that, if any async event handlers are fired after unmount
-    // due to a race, we don't call any configured callbacks.
-    this._config = Object.freeze({});
   }
 
   /**
@@ -471,7 +468,12 @@ export default class Pressability {
         this._touchState = 'NOT_RESPONDER';
         this._receiveSignal('RESPONDER_GRANT', event);
 
-        const delayPressIn = normalizeDelay(this._config.delayPressIn);
+        const delayPressIn = normalizeDelay(
+          this._config.delayPressIn,
+          0,
+          DEFAULT_PRESS_DELAY_MS,
+        );
+
         if (delayPressIn > 0) {
           this._pressDelayTimeout = setTimeout(() => {
             this._receiveSignal('DELAY', event);
@@ -483,7 +485,7 @@ export default class Pressability {
         const delayLongPress = normalizeDelay(
           this._config.delayLongPress,
           10,
-          DEFAULT_LONG_PRESS_DELAY_MS - delayPressIn,
+          DEFAULT_LONG_PRESS_DELAY_MS,
         );
         this._longPressDelayTimeout = setTimeout(() => {
           this._handleLongPress(event);
@@ -571,7 +573,6 @@ export default class Pressability {
                     this._config.delayHoverIn,
                   );
                   if (delayHoverIn > 0) {
-                    event.persist();
                     this._hoverInDelayTimeout = setTimeout(() => {
                       onHoverIn(event);
                     }, delayHoverIn);
@@ -592,7 +593,6 @@ export default class Pressability {
                     this._config.delayHoverOut,
                   );
                   if (delayHoverOut > 0) {
-                    event.persist();
                     this._hoverInDelayTimeout = setTimeout(() => {
                       onHoverOut(event);
                     }, delayHoverOut);
@@ -679,11 +679,6 @@ export default class Pressability {
     }
 
     if (isPressInSignal(prevState) && signal === 'RESPONDER_RELEASE') {
-      // If we never activated (due to delays), activate and deactivate now.
-      if (!isNextActive && !isPrevActive) {
-        this._activate(event);
-        this._deactivate(event);
-      }
       const {onLongPress, onPress, android_disableSound} = this._config;
       if (onPress != null) {
         const isPressCanceledByLongPress =
@@ -691,6 +686,11 @@ export default class Pressability {
           prevState === 'RESPONDER_ACTIVE_LONG_PRESS_IN' &&
           this._shouldLongPressCancelPress();
         if (!isPressCanceledByLongPress) {
+          // If we never activated (due to delays), activate and deactivate now.
+          if (!isNextActive && !isPrevActive) {
+            this._activate(event);
+            this._deactivate(event);
+          }
           if (Platform.OS === 'android' && android_disableSound !== true) {
             SoundManager.playTouchSound();
           }
@@ -729,7 +729,6 @@ export default class Pressability {
         normalizeDelay(this._config.delayPressOut),
       );
       if (delayPressOut > 0) {
-        event.persist();
         this._pressOutDelayTimeout = setTimeout(() => {
           onPressOut(event);
         }, delayPressOut);

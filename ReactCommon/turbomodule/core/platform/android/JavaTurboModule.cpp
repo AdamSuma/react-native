@@ -13,7 +13,6 @@
 #include <jsi/jsi.h>
 
 #include <ReactCommon/TurboModule.h>
-#include <ReactCommon/TurboModulePerfLogger.h>
 #include <jsi/JSIDynamic.h>
 #include <react/jni/NativeMap.h>
 #include <react/jni/ReadableNativeMap.h>
@@ -21,22 +20,20 @@
 
 #include "JavaTurboModule.h"
 
-namespace TMPL = facebook::react::TurboModulePerfLogger;
-
 namespace facebook {
 namespace react {
 
-JavaTurboModule::JavaTurboModule(const InitParams &params)
-    : TurboModule(params.moduleName, params.jsInvoker),
-      instance_(jni::make_global(params.instance)),
-      nativeInvoker_(params.nativeInvoker) {}
-
-bool JavaTurboModule::isPromiseAsyncDispatchEnabled_ = false;
-void JavaTurboModule::enablePromiseAsyncDispatch(bool enable) {
-  isPromiseAsyncDispatchEnabled_ = enable;
-}
+JavaTurboModule::JavaTurboModule(
+    const std::string &name,
+    jni::alias_ref<JTurboModule> instance,
+    std::shared_ptr<CallInvoker> jsInvoker,
+    std::shared_ptr<CallInvoker> nativeInvoker)
+    : TurboModule(name, jsInvoker),
+      instance_(jni::make_global(instance)),
+      nativeInvoker_(nativeInvoker) {}
 
 namespace {
+
 jni::local_ref<JCxxCallbackImpl::JavaPart> createJavaCallbackFromJSIFunction(
     jsi::Function &&function,
     jsi::Runtime &rt,
@@ -205,11 +202,6 @@ std::vector<std::string> getMethodArgTypesFromSignature(
   return methodArgs;
 }
 
-int32_t getUniqueId() {
-  static int32_t counter = 0;
-  return counter++;
-}
-
 } // namespace
 
 // fnjni already does this conversion, but since we are using plain JNI, this
@@ -240,8 +232,7 @@ JNIArgs JavaTurboModule::convertJSIArgsToJNIArgs(
 
   auto makeGlobalIfNecessary =
       [&globalRefs, env, valueKind](jobject obj) -> jobject {
-    if (valueKind == VoidKind ||
-        (valueKind == PromiseKind && isPromiseAsyncDispatchEnabled_)) {
+    if (valueKind == VoidKind) {
       jobject globalObj = env->NewGlobalRef(obj);
       globalRefs.push_back(globalObj);
       env->DeleteLocalRef(obj);
@@ -402,25 +393,10 @@ jsi::Value convertFromJMapToValue(JNIEnv *env, jsi::Runtime &rt, jobject arg) {
 jsi::Value JavaTurboModule::invokeJavaMethod(
     jsi::Runtime &runtime,
     TurboModuleMethodValueKind valueKind,
-    const std::string &methodNameStr,
+    const std::string &methodName,
     const std::string &methodSignature,
     const jsi::Value *args,
     size_t argCount) {
-  const char *methodName = methodNameStr.c_str();
-  const char *moduleName = name_.c_str();
-
-  bool isMethodSync =
-      !(valueKind == VoidKind ||
-        (valueKind == PromiseKind && isPromiseAsyncDispatchEnabled_));
-
-  if (isMethodSync) {
-    TMPL::syncMethodCallStart(moduleName, methodName);
-    TMPL::syncMethodCallArgConversionStart(moduleName, methodName);
-  } else {
-    TMPL::asyncMethodCallStart(moduleName, methodName);
-    TMPL::asyncMethodCallArgConversionStart(moduleName, methodName);
-  }
-
   JNIEnv *env = jni::Environment::current();
   auto instance = instance_.get();
 
@@ -458,44 +434,22 @@ jsi::Value JavaTurboModule::invokeJavaMethod(
 
   jclass cls = env->GetObjectClass(instance);
   jmethodID methodID =
-      env->GetMethodID(cls, methodName, methodSignature.c_str());
-
-  auto checkJNIErrorForMethodCall =
-      [methodName, moduleName, isMethodSync]() -> void {
-    try {
-      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
-    } catch (...) {
-      if (isMethodSync) {
-        TMPL::syncMethodCallFail(moduleName, methodName);
-      } else {
-        TMPL::asyncMethodCallFail(moduleName, methodName);
-      }
-      throw;
-    }
-  };
+      env->GetMethodID(cls, methodName.c_str(), methodSignature.c_str());
 
   // If the method signature doesn't match, show a redbox here instead of
   // crashing later.
-  checkJNIErrorForMethodCall();
+  FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
   // TODO(T43933641): Refactor to remove this special-casing
-  if (methodNameStr == "getConstants") {
-    TMPL::syncMethodCallArgConversionEnd(moduleName, methodName);
-    TMPL::syncMethodCallExecutionStart(moduleName, methodName);
-
+  if (methodName == "getConstants") {
     auto constantsMap = (jobject)env->CallObjectMethod(instance, methodID);
-    checkJNIErrorForMethodCall();
+    FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-    TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-    TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
+    if (constantsMap == nullptr) {
+      return jsi::Value::undefined();
+    }
 
-    jsi::Value returnValue = constantsMap == nullptr
-        ? jsi::Value::undefined()
-        : convertFromJMapToValue(env, runtime, constantsMap);
-
-    TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-    TMPL::syncMethodCallEnd(moduleName, methodName);
-    return returnValue;
+    return convertFromJMapToValue(env, runtime, constantsMap);
   }
 
   std::vector<std::string> methodArgTypes =
@@ -504,62 +458,65 @@ jsi::Value JavaTurboModule::invokeJavaMethod(
   JNIArgs jniArgs = convertJSIArgsToJNIArgs(
       env,
       runtime,
-      methodNameStr,
+      methodName,
       methodArgTypes,
       args,
       argCount,
       jsInvoker_,
       valueKind);
 
-  if (isMethodSync && valueKind != PromiseKind) {
-    TMPL::syncMethodCallArgConversionEnd(moduleName, methodName);
-    TMPL::syncMethodCallExecutionStart(moduleName, methodName);
-  }
-
   auto &jargs = jniArgs.args_;
   auto &globalRefs = jniArgs.globalRefs_;
 
   switch (valueKind) {
+    case VoidKind: {
+      nativeInvoker_->invokeAsync(
+          [jargs, globalRefs, methodID, instance_ = instance_]() mutable
+          -> void {
+            /**
+             * TODO(ramanpreet): Why do we have to require the environment
+             * again? Why does JNI crash when we use the env from the upper
+             * scope?
+             */
+            JNIEnv *env = jni::Environment::current();
+
+            env->CallVoidMethodA(instance_.get(), methodID, jargs.data());
+            FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
+
+            for (auto globalRef : globalRefs) {
+              env->DeleteGlobalRef(globalRef);
+            }
+          });
+
+      return jsi::Value::undefined();
+    }
     case BooleanKind: {
       std::string returnType =
           methodSignature.substr(methodSignature.find_last_of(')') + 1);
       if (returnType == "Ljava/lang/Boolean;") {
         auto returnObject =
             (jobject)env->CallObjectMethodA(instance, methodID, jargs.data());
-        checkJNIErrorForMethodCall();
+        FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-        TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-        TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-        jsi::Value returnValue = jsi::Value::null();
-        if (returnObject != nullptr) {
-          jclass booleanClass = env->FindClass("java/lang/Boolean");
-          jmethodID booleanValueMethod =
-              env->GetMethodID(booleanClass, "booleanValue", "()Z");
-          bool returnBoolean =
-              (bool)env->CallBooleanMethod(returnObject, booleanValueMethod);
-          checkJNIErrorForMethodCall();
-          returnValue = jsi::Value(returnBoolean);
+        if (returnObject == nullptr) {
+          return jsi::Value::null();
         }
 
-        TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-        TMPL::syncMethodCallEnd(moduleName, methodName);
-        return returnValue;
+        jclass booleanClass = env->FindClass("java/lang/Boolean");
+        jmethodID booleanValueMethod =
+            env->GetMethodID(booleanClass, "booleanValue", "()Z");
+        bool returnBoolean =
+            (bool)env->CallBooleanMethod(returnObject, booleanValueMethod);
+        FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
+
+        return jsi::Value(returnBoolean);
       }
 
       bool returnBoolean =
           (bool)env->CallBooleanMethodA(instance, methodID, jargs.data());
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-      TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-      jsi::Value returnValue = jsi::Value(returnBoolean);
-
-      TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-      TMPL::syncMethodCallEnd(moduleName, methodName);
-
-      return returnValue;
+      return jsi::Value(returnBoolean);
     }
     case NumberKind: {
       std::string returnType =
@@ -567,139 +524,64 @@ jsi::Value JavaTurboModule::invokeJavaMethod(
       if (returnType == "Ljava/lang/Double;") {
         auto returnObject =
             (jobject)env->CallObjectMethodA(instance, methodID, jargs.data());
-        checkJNIErrorForMethodCall();
+        FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-        TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-        TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-        jsi::Value returnValue = jsi::Value::null();
-        if (returnObject != nullptr) {
-          jclass doubleClass = env->FindClass("java/lang/Double");
-          jmethodID doubleValueMethod =
-              env->GetMethodID(doubleClass, "doubleValue", "()D");
-          double returnDouble =
-              (double)env->CallDoubleMethod(returnObject, doubleValueMethod);
-          checkJNIErrorForMethodCall();
-          returnValue = jsi::Value(returnDouble);
+        if (returnObject == nullptr) {
+          return jsi::Value::null();
         }
 
-        TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-        TMPL::syncMethodCallEnd(moduleName, methodName);
-        return returnValue;
+        jclass doubleClass = env->FindClass("java/lang/Double");
+        jmethodID doubleValueMethod =
+            env->GetMethodID(doubleClass, "doubleValue", "()D");
+        double returnDouble =
+            (double)env->CallDoubleMethod(returnObject, doubleValueMethod);
+        FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
+
+        return jsi::Value(returnDouble);
       }
 
       double returnDouble =
           (double)env->CallDoubleMethodA(instance, methodID, jargs.data());
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-      TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-      jsi::Value returnValue = jsi::Value(returnDouble);
-
-      TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-      TMPL::syncMethodCallEnd(moduleName, methodName);
-      return returnValue;
+      return jsi::Value(returnDouble);
     }
     case StringKind: {
       auto returnString =
           (jstring)env->CallObjectMethodA(instance, methodID, jargs.data());
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-      TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-      jsi::Value returnValue = jsi::Value::null();
-      if (returnString != nullptr) {
-        const char *js = env->GetStringUTFChars(returnString, nullptr);
-        std::string result = js;
-        env->ReleaseStringUTFChars(returnString, js);
-        returnValue =
-            jsi::Value(runtime, jsi::String::createFromUtf8(runtime, result));
+      if (returnString == nullptr) {
+        return jsi::Value::null();
       }
-
-      TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-      TMPL::syncMethodCallEnd(moduleName, methodName);
-      return returnValue;
+      const char *js = env->GetStringUTFChars(returnString, nullptr);
+      std::string result = js;
+      env->ReleaseStringUTFChars(returnString, js);
+      return jsi::Value(runtime, jsi::String::createFromUtf8(runtime, result));
     }
     case ObjectKind: {
       auto returnObject =
           (jobject)env->CallObjectMethodA(instance, methodID, jargs.data());
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-      TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-      jsi::Value returnValue = jsi::Value::null();
-      if (returnObject != nullptr) {
-        auto jResult = jni::adopt_local(returnObject);
-        auto result = jni::static_ref_cast<NativeMap::jhybridobject>(jResult);
-        returnValue =
-            jsi::valueFromDynamic(runtime, result->cthis()->consume());
+      if (returnObject == nullptr) {
+        return jsi::Value::null();
       }
-
-      TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-      TMPL::syncMethodCallEnd(moduleName, methodName);
-      return returnValue;
+      auto jResult = jni::adopt_local(returnObject);
+      auto result = jni::static_ref_cast<NativeMap::jhybridobject>(jResult);
+      return jsi::valueFromDynamic(runtime, result->cthis()->consume());
     }
     case ArrayKind: {
       auto returnObject =
           (jobject)env->CallObjectMethodA(instance, methodID, jargs.data());
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-      TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-
-      jsi::Value returnValue = jsi::Value::null();
-      if (returnObject != nullptr) {
-        auto jResult = jni::adopt_local(returnObject);
-        auto result = jni::static_ref_cast<NativeArray::jhybridobject>(jResult);
-        returnValue =
-            jsi::valueFromDynamic(runtime, result->cthis()->consume());
+      if (returnObject == nullptr) {
+        return jsi::Value::null();
       }
-
-      TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-      TMPL::syncMethodCallEnd(moduleName, methodName);
-      return returnValue;
-    }
-    case VoidKind: {
-      TMPL::asyncMethodCallArgConversionEnd(moduleName, methodName);
-      TMPL::asyncMethodCallDispatch(moduleName, methodName);
-
-      nativeInvoker_->invokeAsync(
-          [jargs,
-           globalRefs,
-           methodID,
-           instance_ = instance_,
-           moduleNameStr = name_,
-           methodNameStr,
-           id = getUniqueId()]() mutable -> void {
-            /**
-             * TODO(ramanpreet): Why do we have to require the environment
-             * again? Why does JNI crash when we use the env from the upper
-             * scope?
-             */
-            JNIEnv *env = jni::Environment::current();
-            const char *moduleName = moduleNameStr.c_str();
-            const char *methodName = methodNameStr.c_str();
-
-            TMPL::asyncMethodCallExecutionStart(moduleName, methodName, id);
-            env->CallVoidMethodA(instance_.get(), methodID, jargs.data());
-            try {
-              FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
-            } catch (...) {
-              TMPL::asyncMethodCallExecutionFail(moduleName, methodName, id);
-              throw;
-            }
-
-            for (auto globalRef : globalRefs) {
-              env->DeleteGlobalRef(globalRef);
-            }
-            TMPL::asyncMethodCallExecutionEnd(moduleName, methodName, id);
-          });
-
-      TMPL::asyncMethodCallEnd(moduleName, methodName);
-      return jsi::Value::undefined();
+      auto jResult = jni::adopt_local(returnObject);
+      auto result = jni::static_ref_cast<NativeArray::jhybridobject>(jResult);
+      return jsi::valueFromDynamic(runtime, result->cthis()->consume());
     }
     case PromiseKind: {
       jsi::Function Promise =
@@ -709,15 +591,7 @@ jsi::Value JavaTurboModule::invokeJavaMethod(
           runtime,
           jsi::PropNameID::forAscii(runtime, "fn"),
           2,
-          [this,
-           &jargs,
-           &globalRefs,
-           argCount,
-           instance_ = instance_,
-           methodID,
-           moduleNameStr = name_,
-           methodNameStr,
-           env](
+          [this, &jargs, argCount, instance, methodID, env](
               jsi::Runtime &runtime,
               const jsi::Value &thisVal,
               const jsi::Value *promiseConstructorArgs,
@@ -750,82 +624,21 @@ jsi::Value JavaTurboModule::invokeJavaMethod(
             jobject promise = env->NewObject(
                 jPromiseImpl, jPromiseImplConstructor, resolve, reject);
 
-            const char *moduleName = moduleNameStr.c_str();
-            const char *methodName = methodNameStr.c_str();
-
-            if (isPromiseAsyncDispatchEnabled_) {
-              jobject globalPromise = env->NewGlobalRef(promise);
-
-              globalRefs.push_back(globalPromise);
-              env->DeleteLocalRef(promise);
-
-              jargs[argCount].l = globalPromise;
-              TMPL::asyncMethodCallArgConversionEnd(moduleName, methodName);
-              TMPL::asyncMethodCallDispatch(moduleName, methodName);
-
-              nativeInvoker_->invokeAsync(
-                  [jargs,
-                   globalRefs,
-                   methodID,
-                   instance_ = instance_,
-                   moduleNameStr,
-                   methodNameStr,
-                   id = getUniqueId()]() mutable -> void {
-                    /**
-                     * TODO(ramanpreet): Why do we have to require the
-                     * environment again? Why does JNI crash when we use the env
-                     * from the upper scope?
-                     */
-                    JNIEnv *env = jni::Environment::current();
-                    const char *moduleName = moduleNameStr.c_str();
-                    const char *methodName = methodNameStr.c_str();
-
-                    TMPL::asyncMethodCallExecutionStart(
-                        moduleName, methodName, id);
-                    env->CallVoidMethodA(
-                        instance_.get(), methodID, jargs.data());
-                    try {
-                      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
-                    } catch (...) {
-                      TMPL::asyncMethodCallExecutionFail(
-                          moduleName, methodName, id);
-                      throw;
-                    }
-
-                    for (auto globalRef : globalRefs) {
-                      env->DeleteGlobalRef(globalRef);
-                    }
-                    TMPL::asyncMethodCallExecutionEnd(
-                        moduleName, methodName, id);
-                  });
-
-            } else {
-              jargs[argCount].l = promise;
-              TMPL::syncMethodCallArgConversionEnd(moduleName, methodName);
-              TMPL::syncMethodCallExecutionStart(moduleName, methodName);
-              env->CallVoidMethodA(instance_.get(), methodID, jargs.data());
-              TMPL::syncMethodCallExecutionEnd(moduleName, methodName);
-              TMPL::syncMethodCallReturnConversionStart(moduleName, methodName);
-            }
+            jargs[argCount].l = promise;
+            env->CallVoidMethodA(instance, methodID, jargs.data());
 
             return jsi::Value::undefined();
           });
 
       jsi::Value promise =
           Promise.callAsConstructor(runtime, promiseConstructorArg);
-      checkJNIErrorForMethodCall();
+      FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
 
-      if (isPromiseAsyncDispatchEnabled_) {
-        TMPL::asyncMethodCallEnd(moduleName, methodName);
-      } else {
-        TMPL::syncMethodCallReturnConversionEnd(moduleName, methodName);
-        TMPL::syncMethodCallEnd(moduleName, methodName);
-      }
       return promise;
     }
     default:
       throw std::runtime_error(
-          "Unable to find method module: " + methodNameStr + "(" +
+          "Unable to find method module: " + methodName + "(" +
           methodSignature + ")");
   }
 }

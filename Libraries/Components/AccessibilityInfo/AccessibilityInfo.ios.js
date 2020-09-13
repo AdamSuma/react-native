@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow strict-local
+ * @flow
  */
 
 'use strict';
 
-import RCTDeviceEventEmitter from '../../EventEmitter/RCTDeviceEventEmitter';
+const Promise = require('../../Promise');
+const RCTDeviceEventEmitter = require('../../EventEmitter/RCTDeviceEventEmitter');
+
 import NativeAccessibilityManager from './NativeAccessibilityManager';
 
 const CHANGE_EVENT_NAME = {
@@ -163,7 +165,6 @@ const AccessibilityInfo = {
    *
    * Same as `isScreenReaderEnabled`
    */
-  // $FlowFixMe[unsafe-getters-setters]
   get fetch(): $FlowFixMe {
     console.warn(
       'AccessibilityInfo.fetch is deprecated, call AccessibilityInfo.isScreenReaderEnabled instead',
@@ -202,10 +203,10 @@ const AccessibilityInfo = {
    *
    * See https://reactnative.dev/docs/accessibilityinfo.html#addeventlistener
    */
-  addEventListener: function<T>(
+  addEventListener: function(
     eventName: ChangeEventName,
-    handler: T,
-  ): {remove: () => void} {
+    handler: Function,
+  ): Object {
     let listener;
 
     if (eventName === 'change') {
@@ -254,9 +255,9 @@ const AccessibilityInfo = {
    *
    * See https://reactnative.dev/docs/accessibilityinfo.html#removeeventlistener
    */
-  removeEventListener: function<T>(
+  removeEventListener: function(
     eventName: ChangeEventName,
-    handler: T,
+    handler: Function,
   ): void {
     const listener = _subscriptions.get(handler);
     if (!listener) {

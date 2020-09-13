@@ -11,10 +11,4 @@ package com.facebook.hermes.reactexecutor;
 public final class RuntimeConfig {
   public long heapSizeMB;
   public boolean es6Proxy;
-
-  RuntimeConfig() {}
-
-  RuntimeConfig(long heapSizeMB) {
-    this.heapSizeMB = heapSizeMB;
-  }
 }

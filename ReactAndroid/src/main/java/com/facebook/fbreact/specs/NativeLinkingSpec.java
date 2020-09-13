@@ -26,7 +26,13 @@ public abstract class NativeLinkingSpec extends ReactContextBaseJavaModule imple
   }
 
   @ReactMethod
-  public abstract void addListener(String eventName);
+  public abstract void sendIntent(String action, ReadableArray extras, Promise promise);
+
+  @ReactMethod
+  public abstract void openURL(String url, Promise promise);
+
+  @ReactMethod
+  public abstract void removeListeners(double count);
 
   @ReactMethod
   public abstract void canOpenURL(String url, Promise promise);
@@ -38,11 +44,5 @@ public abstract class NativeLinkingSpec extends ReactContextBaseJavaModule imple
   public abstract void openSettings(Promise promise);
 
   @ReactMethod
-  public abstract void openURL(String url, Promise promise);
-
-  @ReactMethod
-  public abstract void removeListeners(double count);
-
-  @ReactMethod
-  public abstract void sendIntent(String action, ReadableArray extras, Promise promise);
+  public abstract void addListener(String eventName);
 }

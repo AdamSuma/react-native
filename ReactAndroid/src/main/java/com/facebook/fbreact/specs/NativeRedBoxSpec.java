@@ -25,8 +25,8 @@ public abstract class NativeRedBoxSpec extends ReactContextBaseJavaModule implem
   }
 
   @ReactMethod
-  public abstract void dismiss();
+  public abstract void setExtraData(ReadableMap extraData, String forIdentifier);
 
   @ReactMethod
-  public abstract void setExtraData(ReadableMap extraData, String forIdentifier);
+  public abstract void dismiss();
 }

@@ -9,11 +9,12 @@
 
 #import <React/RCTAssert.h>
 #import <React/RCTBorderDrawing.h>
-#import <React/RCTConversions.h>
 #import <objc/runtime.h>
-#import <react/renderer/components/view/ViewComponentDescriptor.h>
-#import <react/renderer/components/view/ViewEventEmitter.h>
-#import <react/renderer/components/view/ViewProps.h>
+#import <react/components/view/ViewComponentDescriptor.h>
+#import <react/components/view/ViewEventEmitter.h>
+#import <react/components/view/ViewProps.h>
+
+#import "RCTConversions.h"
 
 using namespace facebook::react;
 
@@ -47,8 +48,19 @@ using namespace facebook::react;
 
   if (_contentView) {
     [self addSubview:_contentView];
-    _contentView.frame = RCTCGRectFromRect(_layoutMetrics.getContentFrame());
   }
+}
+
+- (void)layoutSubviews
+{
+  [super layoutSubviews];
+  // Consider whether using `updateLayoutMetrics:oldLayoutMetrics`
+  // isn't more appropriate for your use case. `layoutSubviews` is called
+  // by UIKit while `updateLayoutMetrics:oldLayoutMetrics` is called
+  // by React Native Renderer within `CATransaction`.
+  // If you are calling `setFrame:` or other methods that cause
+  // `layoutSubviews` to be triggered, `_contentView`'s and `_borderLayout`'s
+  // frames might get out of sync with `self.bounds`.
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
@@ -166,10 +178,7 @@ using namespace facebook::react;
 
   // `hitSlop`
   if (oldViewProps.hitSlop != newViewProps.hitSlop) {
-    self.hitTestEdgeInsets = {-newViewProps.hitSlop.top,
-                              -newViewProps.hitSlop.left,
-                              -newViewProps.hitSlop.bottom,
-                              -newViewProps.hitSlop.right};
+    self.hitTestEdgeInsets = RCTUIEdgeInsetsFromEdgeInsets(newViewProps.hitSlop);
   }
 
   // `overflow`
@@ -214,21 +223,9 @@ using namespace facebook::react;
     self.accessibilityElement.accessibilityElementsHidden = newViewProps.accessibilityElementsHidden;
   }
 
-  // `accessibilityTraits`
   if (oldViewProps.accessibilityTraits != newViewProps.accessibilityTraits) {
     self.accessibilityElement.accessibilityTraits =
         RCTUIAccessibilityTraitsFromAccessibilityTraits(newViewProps.accessibilityTraits);
-  }
-
-  // `accessibilityState`
-  if (oldViewProps.accessibilityState != newViewProps.accessibilityState) {
-    self.accessibilityTraits &= ~(UIAccessibilityTraitNotEnabled | UIAccessibilityTraitSelected);
-    if (newViewProps.accessibilityState.selected) {
-      self.accessibilityTraits |= UIAccessibilityTraitSelected;
-    }
-    if (newViewProps.accessibilityState.disabled) {
-      self.accessibilityTraits |= UIAccessibilityTraitNotEnabled;
-    }
   }
 
   // `accessibilityIgnoresInvertColors`
@@ -340,8 +337,8 @@ static RCTCornerRadii RCTCornerRadiiFromBorderRadii(BorderRadii borderRadii)
 
 static RCTBorderColors RCTBorderColorsFromBorderColors(BorderColors borderColors)
 {
-  return RCTBorderColors{.top = RCTCGColorRefUnretainedFromSharedColor(borderColors.top),
-                         .left = RCTCGColorRefUnretainedFromSharedColor(borderColors.left),
+  return RCTBorderColors{.left = RCTCGColorRefUnretainedFromSharedColor(borderColors.left),
+                         .top = RCTCGColorRefUnretainedFromSharedColor(borderColors.top),
                          .bottom = RCTCGColorRefUnretainedFromSharedColor(borderColors.bottom),
                          .right = RCTCGColorRefUnretainedFromSharedColor(borderColors.right)};
 }
@@ -514,46 +511,13 @@ static NSString *RCTRecursiveAccessibilityLabel(UIView *view)
   return RCTRecursiveAccessibilityLabel(self);
 }
 
-- (NSString *)accessibilityValue
-{
-  auto const &props = *std::static_pointer_cast<ViewProps const>(_props);
-
-  // Handle Switch.
-  if ((self.accessibilityTraits & AccessibilityTraitSwitch) == AccessibilityTraitSwitch) {
-    if (props.accessibilityState.checked == AccessibilityState::Checked) {
-      return @"1";
-    } else if (props.accessibilityState.checked == AccessibilityState::Unchecked) {
-      return @"0";
-    }
-  }
-
-  // Handle states which haven't already been handled.
-  if (props.accessibilityState.checked == AccessibilityState::Checked) {
-    return @"checked";
-  }
-  if (props.accessibilityState.checked == AccessibilityState::Unchecked) {
-    return @"unchecked";
-  }
-  if (props.accessibilityState.checked == AccessibilityState::Mixed) {
-    return @"mixed";
-  }
-  if (props.accessibilityState.expanded) {
-    return @"expanded";
-  }
-  if (props.accessibilityState.busy) {
-    return @"busy";
-  }
-
-  return nil;
-}
-
 #pragma mark - Accessibility Events
 
 - (NSArray<UIAccessibilityCustomAction *> *)accessibilityCustomActions
 {
   auto const &accessibilityActions = _props->accessibilityActions;
 
-  if (accessibilityActions.empty()) {
+  if (accessibilityActions.size() == 0) {
     return nil;
   }
 
@@ -619,19 +583,3 @@ static NSString *RCTRecursiveAccessibilityLabel(UIView *view)
 }
 
 @end
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Can't the import generated Plugin.h because plugins are not in this BUCK target
-Class<RCTComponentViewProtocol> RCTViewCls(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-Class<RCTComponentViewProtocol> RCTViewCls(void)
-{
-  return RCTViewComponentView.class;
-}

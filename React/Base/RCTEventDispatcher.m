@@ -48,9 +48,6 @@ static uint16_t RCTUniqueCoalescingKeyGenerator = 0;
 }
 
 @synthesize bridge = _bridge;
-@synthesize dispatchToJSThread = _dispatchToJSThread;
-@synthesize invokeJS = _invokeJS;
-@synthesize invokeJSWithModuleDotMethod = _invokeJSWithModuleDotMethod;
 
 RCT_EXPORT_MODULE()
 
@@ -67,26 +64,18 @@ RCT_EXPORT_MODULE()
 
 - (void)sendAppEventWithName:(NSString *)name body:(id)body
 {
-  if (_bridge) {
-    [_bridge enqueueJSCall:@"RCTNativeAppEventEmitter"
-                    method:@"emit"
-                      args:body ? @[ name, body ] : @[ name ]
-                completion:NULL];
-  } else {
-    _invokeJS(@"RCTNativeAppEventEmitter", @"emit", body ? @[ name, body ] : @[ name ]);
-  }
+  [_bridge enqueueJSCall:@"RCTNativeAppEventEmitter"
+                  method:@"emit"
+                    args:body ? @[ name, body ] : @[ name ]
+              completion:NULL];
 }
 
 - (void)sendDeviceEventWithName:(NSString *)name body:(id)body
 {
-  if (_bridge) {
-    [_bridge enqueueJSCall:@"RCTDeviceEventEmitter"
-                    method:@"emit"
-                      args:body ? @[ name, body ] : @[ name ]
-                completion:NULL];
-  } else {
-    _invokeJS(@"RCTDeviceEventEmitter", @"emit", body ? @[ name, body ] : @[ name ]);
-  }
+  [_bridge enqueueJSCall:@"RCTDeviceEventEmitter"
+                  method:@"emit"
+                    args:body ? @[ name, body ] : @[ name ]
+              completion:NULL];
 }
 
 - (void)sendTextEventWithType:(RCTTextEventType)type
@@ -173,17 +162,11 @@ RCT_EXPORT_MODULE()
   [_eventQueueLock unlock];
 
   if (scheduleEventsDispatch) {
-    if (_bridge) {
-      [_bridge
-          dispatchBlock:^{
-            [self flushEventsQueue];
-          }
-                  queue:RCTJSThread];
-    } else if (_dispatchToJSThread) {
-      _dispatchToJSThread(^{
-        [self flushEventsQueue];
-      });
-    }
+    [_bridge
+        dispatchBlock:^{
+          [self flushEventsQueue];
+        }
+                queue:RCTJSThread];
   }
 }
 
@@ -203,11 +186,7 @@ RCT_EXPORT_MODULE()
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
-  if (_bridge) {
-    [_bridge enqueueJSCall:[[event class] moduleDotMethod] args:[event arguments]];
-  } else {
-    _invokeJSWithModuleDotMethod([[event class] moduleDotMethod], [event arguments]);
-  }
+  [_bridge enqueueJSCall:[[event class] moduleDotMethod] args:[event arguments]];
 }
 
 - (dispatch_queue_t)methodQueue

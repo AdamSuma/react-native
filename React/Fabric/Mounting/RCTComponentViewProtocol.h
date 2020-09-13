@@ -7,11 +7,12 @@
 
 #import <UIKit/UIKit.h>
 
-#import <react/renderer/componentregistry/ComponentDescriptorProvider.h>
-#import <react/renderer/core/EventEmitter.h>
-#import <react/renderer/core/LayoutMetrics.h>
-#import <react/renderer/core/Props.h>
-#import <react/renderer/core/State.h>
+#import <React/RCTPrimitives.h>
+#import <react/core/EventEmitter.h>
+#import <react/core/LayoutMetrics.h>
+#import <react/core/Props.h>
+#import <react/core/State.h>
+#import <react/uimanager/ComponentDescriptorProvider.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

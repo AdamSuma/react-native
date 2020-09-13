@@ -13,10 +13,8 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 import androidx.annotation.Nullable;
-import com.facebook.common.logging.FLog;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.common.ReactConstants;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -82,13 +80,7 @@ public class DisplayMetricsHolder {
         screenDisplayMetrics.widthPixels = (Integer) mGetRawW.invoke(display);
         screenDisplayMetrics.heightPixels = (Integer) mGetRawH.invoke(display);
       } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-        // this may not be 100% accurate, but it's all we've got
-        screenDisplayMetrics.widthPixels = display.getWidth();
-        screenDisplayMetrics.heightPixels = display.getHeight();
-        FLog.e(
-            ReactConstants.TAG,
-            "Unable to access getRawHeight and getRawWidth to get real dimensions.",
-            e);
+        throw new RuntimeException("Error getting real dimensions for API level < 17", e);
       }
     }
     DisplayMetricsHolder.setScreenDisplayMetrics(screenDisplayMetrics);
@@ -112,8 +104,8 @@ public class DisplayMetricsHolder {
   }
 
   public static Map<String, Map<String, Object>> getDisplayMetricsMap(double fontScale) {
-    Assertions.assertCondition(
-        sWindowDisplayMetrics != null && sScreenDisplayMetrics != null,
+    Assertions.assertNotNull(
+        sWindowDisplayMetrics != null || sScreenDisplayMetrics != null,
         "DisplayMetricsHolder must be initialized with initDisplayMetricsIfNotInitialized or initDisplayMetrics");
     final Map<String, Map<String, Object>> result = new HashMap<>();
     result.put("windowPhysicalPixels", getPhysicalPixelsMap(sWindowDisplayMetrics, fontScale));
@@ -122,8 +114,8 @@ public class DisplayMetricsHolder {
   }
 
   public static WritableNativeMap getDisplayMetricsNativeMap(double fontScale) {
-    Assertions.assertCondition(
-        sWindowDisplayMetrics != null && sScreenDisplayMetrics != null,
+    Assertions.assertNotNull(
+        sWindowDisplayMetrics != null || sScreenDisplayMetrics != null,
         "DisplayMetricsHolder must be initialized with initDisplayMetricsIfNotInitialized or initDisplayMetrics");
     final WritableNativeMap result = new WritableNativeMap();
     result.putMap(

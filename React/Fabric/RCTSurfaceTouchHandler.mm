@@ -78,16 +78,11 @@ struct ActiveTouch {
   };
 };
 
-static void UpdateActiveTouchWithUITouch(
-    ActiveTouch &activeTouch,
-    UITouch *uiTouch,
-    UIView *rootComponentView,
-    CGPoint rootViewOriginOffset)
+static void UpdateActiveTouchWithUITouch(ActiveTouch &activeTouch, UITouch *uiTouch, UIView *rootComponentView)
 {
   CGPoint offsetPoint = [uiTouch locationInView:activeTouch.componentView];
   CGPoint screenPoint = [uiTouch locationInView:uiTouch.window];
   CGPoint pagePoint = [uiTouch locationInView:rootComponentView];
-  pagePoint = CGPointMake(pagePoint.x + rootViewOriginOffset.x, pagePoint.y + rootViewOriginOffset.y);
 
   activeTouch.touch.offsetPoint = RCTPointFromCGPoint(offsetPoint);
   activeTouch.touch.screenPoint = RCTPointFromCGPoint(screenPoint);
@@ -100,7 +95,7 @@ static void UpdateActiveTouchWithUITouch(
   }
 }
 
-static ActiveTouch CreateTouchWithUITouch(UITouch *uiTouch, UIView *rootComponentView, CGPoint rootViewOriginOffset)
+static ActiveTouch CreateTouchWithUITouch(UITouch *uiTouch, UIView *rootComponentView)
 {
   UIView *componentView = uiTouch.view;
 
@@ -114,7 +109,7 @@ static ActiveTouch CreateTouchWithUITouch(UITouch *uiTouch, UIView *rootComponen
 
   activeTouch.componentView = componentView;
 
-  UpdateActiveTouchWithUITouch(activeTouch, uiTouch, rootComponentView, rootViewOriginOffset);
+  UpdateActiveTouchWithUITouch(activeTouch, uiTouch, rootComponentView);
   return activeTouch;
 }
 
@@ -202,7 +197,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
 - (void)_registerTouches:(NSSet<UITouch *> *)touches
 {
   for (UITouch *touch in touches) {
-    auto activeTouch = CreateTouchWithUITouch(touch, _rootComponentView, _viewOriginOffset);
+    auto activeTouch = CreateTouchWithUITouch(touch, _rootComponentView);
     activeTouch.touch.identifier = _identifierPool.dequeue();
     _activeTouches.emplace(touch, activeTouch);
   }
@@ -217,7 +212,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
       continue;
     }
 
-    UpdateActiveTouchWithUITouch(iterator->second, touch, _rootComponentView, _viewOriginOffset);
+    UpdateActiveTouchWithUITouch(iterator->second, touch, _rootComponentView);
   }
 }
 
@@ -367,7 +362,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
 {
   [super reset];
 
-  if (!_activeTouches.empty()) {
+  if (_activeTouches.size() != 0) {
     std::vector<ActiveTouch> activeTouches;
     activeTouches.reserve(_activeTouches.size());
 

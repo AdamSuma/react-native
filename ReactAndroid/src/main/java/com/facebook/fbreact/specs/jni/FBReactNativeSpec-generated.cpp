@@ -35,8 +35,8 @@ namespace facebook {
     }
 
 
-    NativeAccessibilityInfoSpecJSI::NativeAccessibilityInfoSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAccessibilityInfoSpecJSI::NativeAccessibilityInfoSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AccessibilityInfo", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["isReduceMotionEnabled"] = MethodMetadata {1, __hostFunction_NativeAccessibilityInfoSpecJSI_isReduceMotionEnabled};
         
@@ -96,8 +96,8 @@ namespace facebook {
     }
 
 
-    NativeAccessibilityManagerSpecJSI::NativeAccessibilityManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAccessibilityManagerSpecJSI::NativeAccessibilityManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AccessibilityManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getCurrentBoldTextState"] = MethodMetadata {2, __hostFunction_NativeAccessibilityManagerSpecJSI_getCurrentBoldTextState};
         
@@ -144,8 +144,8 @@ namespace facebook {
     }
 
 
-    NativeActionSheetManagerSpecJSI::NativeActionSheetManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeActionSheetManagerSpecJSI::NativeActionSheetManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ActionSheetManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["showActionSheetWithOptions"] = MethodMetadata {2, __hostFunction_NativeActionSheetManagerSpecJSI_showActionSheetWithOptions};
         
@@ -167,8 +167,8 @@ namespace facebook {
     }
 
 
-    NativeAlertManagerSpecJSI::NativeAlertManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAlertManagerSpecJSI::NativeAlertManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AlertManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["alertWithArgs"] = MethodMetadata {2, __hostFunction_NativeAlertManagerSpecJSI_alertWithArgs};
         
@@ -182,20 +182,8 @@ namespace facebook {
   namespace react {
 
     
-    static facebook::jsi::Value __hostFunction_NativeAnimatedModuleSpecJSI_startOperationBatch(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "startOperationBatch", "()V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedModuleSpecJSI_finishOperationBatch(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "finishOperationBatch", "()V", args, count);
-    }
-
     static facebook::jsi::Value __hostFunction_NativeAnimatedModuleSpecJSI_createAnimatedNode(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
       return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "createAnimatedNode", "(DLcom/facebook/react/bridge/ReadableMap;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedModuleSpecJSI_getValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "getValue", "(DLcom/facebook/react/bridge/Callback;)V", args, count);
     }
 
     static facebook::jsi::Value __hostFunction_NativeAnimatedModuleSpecJSI_startListeningToAnimatedNodeValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
@@ -271,19 +259,10 @@ namespace facebook {
     }
 
 
-    NativeAnimatedModuleSpecJSI::NativeAnimatedModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
-        
-        methodMap_["startOperationBatch"] = MethodMetadata {0, __hostFunction_NativeAnimatedModuleSpecJSI_startOperationBatch};
-        
-        
-        methodMap_["finishOperationBatch"] = MethodMetadata {0, __hostFunction_NativeAnimatedModuleSpecJSI_finishOperationBatch};
-        
+    NativeAnimatedModuleSpecJSI::NativeAnimatedModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AnimatedModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["createAnimatedNode"] = MethodMetadata {2, __hostFunction_NativeAnimatedModuleSpecJSI_createAnimatedNode};
-        
-        
-        methodMap_["getValue"] = MethodMetadata {2, __hostFunction_NativeAnimatedModuleSpecJSI_getValue};
         
         
         methodMap_["startListeningToAnimatedNodeValue"] = MethodMetadata {1, __hostFunction_NativeAnimatedModuleSpecJSI_startListeningToAnimatedNodeValue};
@@ -349,173 +328,6 @@ namespace facebook {
   namespace react {
 
     
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_startOperationBatch(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "startOperationBatch", "()V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_finishOperationBatch(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "finishOperationBatch", "()V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_createAnimatedNode(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "createAnimatedNode", "(DLcom/facebook/react/bridge/ReadableMap;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_getValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "getValue", "(DLcom/facebook/react/bridge/Callback;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_startListeningToAnimatedNodeValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "startListeningToAnimatedNodeValue", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_stopListeningToAnimatedNodeValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "stopListeningToAnimatedNodeValue", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_connectAnimatedNodes(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "connectAnimatedNodes", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_disconnectAnimatedNodes(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "disconnectAnimatedNodes", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_startAnimatingNode(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "startAnimatingNode", "(DDLcom/facebook/react/bridge/ReadableMap;Lcom/facebook/react/bridge/Callback;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_stopAnimation(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "stopAnimation", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_setAnimatedNodeValue(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "setAnimatedNodeValue", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_setAnimatedNodeOffset(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "setAnimatedNodeOffset", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_flattenAnimatedNodeOffset(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "flattenAnimatedNodeOffset", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_extractAnimatedNodeOffset(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "extractAnimatedNodeOffset", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_connectAnimatedNodeToView(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "connectAnimatedNodeToView", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_disconnectAnimatedNodeFromView(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "disconnectAnimatedNodeFromView", "(DD)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_restoreDefaultValues(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "restoreDefaultValues", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_dropAnimatedNode(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "dropAnimatedNode", "(D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_addAnimatedEventToView(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "addAnimatedEventToView", "(DLjava/lang/String;Lcom/facebook/react/bridge/ReadableMap;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_removeAnimatedEventFromView(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "removeAnimatedEventFromView", "(DLjava/lang/String;D)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_addListener(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "addListener", "(Ljava/lang/String;)V", args, count);
-    }
-
-    static facebook::jsi::Value __hostFunction_NativeAnimatedTurboModuleSpecJSI_removeListeners(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "removeListeners", "(D)V", args, count);
-    }
-
-
-    NativeAnimatedTurboModuleSpecJSI::NativeAnimatedTurboModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
-        
-        methodMap_["startOperationBatch"] = MethodMetadata {0, __hostFunction_NativeAnimatedTurboModuleSpecJSI_startOperationBatch};
-        
-        
-        methodMap_["finishOperationBatch"] = MethodMetadata {0, __hostFunction_NativeAnimatedTurboModuleSpecJSI_finishOperationBatch};
-        
-        
-        methodMap_["createAnimatedNode"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_createAnimatedNode};
-        
-        
-        methodMap_["getValue"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_getValue};
-        
-        
-        methodMap_["startListeningToAnimatedNodeValue"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_startListeningToAnimatedNodeValue};
-        
-        
-        methodMap_["stopListeningToAnimatedNodeValue"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_stopListeningToAnimatedNodeValue};
-        
-        
-        methodMap_["connectAnimatedNodes"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_connectAnimatedNodes};
-        
-        
-        methodMap_["disconnectAnimatedNodes"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_disconnectAnimatedNodes};
-        
-        
-        methodMap_["startAnimatingNode"] = MethodMetadata {4, __hostFunction_NativeAnimatedTurboModuleSpecJSI_startAnimatingNode};
-        
-        
-        methodMap_["stopAnimation"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_stopAnimation};
-        
-        
-        methodMap_["setAnimatedNodeValue"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_setAnimatedNodeValue};
-        
-        
-        methodMap_["setAnimatedNodeOffset"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_setAnimatedNodeOffset};
-        
-        
-        methodMap_["flattenAnimatedNodeOffset"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_flattenAnimatedNodeOffset};
-        
-        
-        methodMap_["extractAnimatedNodeOffset"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_extractAnimatedNodeOffset};
-        
-        
-        methodMap_["connectAnimatedNodeToView"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_connectAnimatedNodeToView};
-        
-        
-        methodMap_["disconnectAnimatedNodeFromView"] = MethodMetadata {2, __hostFunction_NativeAnimatedTurboModuleSpecJSI_disconnectAnimatedNodeFromView};
-        
-        
-        methodMap_["restoreDefaultValues"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_restoreDefaultValues};
-        
-        
-        methodMap_["dropAnimatedNode"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_dropAnimatedNode};
-        
-        
-        methodMap_["addAnimatedEventToView"] = MethodMetadata {3, __hostFunction_NativeAnimatedTurboModuleSpecJSI_addAnimatedEventToView};
-        
-        
-        methodMap_["removeAnimatedEventFromView"] = MethodMetadata {3, __hostFunction_NativeAnimatedTurboModuleSpecJSI_removeAnimatedEventFromView};
-        
-        
-        methodMap_["addListener"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_addListener};
-        
-        
-        methodMap_["removeListeners"] = MethodMetadata {1, __hostFunction_NativeAnimatedTurboModuleSpecJSI_removeListeners};
-        
-        
-
-    }
-
-  } // namespace react
-} // namespace facebook
-namespace facebook {
-  namespace react {
-
-    
     static facebook::jsi::Value __hostFunction_NativeAnimationsDebugModuleSpecJSI_startRecordingFps(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
       return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "startRecordingFps", "()V", args, count);
     }
@@ -525,8 +337,8 @@ namespace facebook {
     }
 
 
-    NativeAnimationsDebugModuleSpecJSI::NativeAnimationsDebugModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAnimationsDebugModuleSpecJSI::NativeAnimationsDebugModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AnimationsDebugModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["startRecordingFps"] = MethodMetadata {0, __hostFunction_NativeAnimationsDebugModuleSpecJSI_startRecordingFps};
         
@@ -560,8 +372,8 @@ namespace facebook {
     }
 
 
-    NativeAppStateSpecJSI::NativeAppStateSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAppStateSpecJSI::NativeAppStateSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AppState", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getCurrentAppState"] = MethodMetadata {2, __hostFunction_NativeAppStateSpecJSI_getCurrentAppState};
         
@@ -597,8 +409,8 @@ namespace facebook {
     }
 
 
-    NativeAppearanceSpecJSI::NativeAppearanceSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAppearanceSpecJSI::NativeAppearanceSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("Appearance", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getColorScheme"] = MethodMetadata {0, __hostFunction_NativeAppearanceSpecJSI_getColorScheme};
         
@@ -643,8 +455,8 @@ namespace facebook {
     }
 
 
-    NativeAsyncStorageSpecJSI::NativeAsyncStorageSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeAsyncStorageSpecJSI::NativeAsyncStorageSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("AsyncStorage", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["multiGet"] = MethodMetadata {2, __hostFunction_NativeAsyncStorageSpecJSI_multiGet};
         
@@ -702,8 +514,8 @@ namespace facebook {
     }
 
 
-    NativeBlobModuleSpecJSI::NativeBlobModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeBlobModuleSpecJSI::NativeBlobModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("BlobModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["addNetworkingHandler"] = MethodMetadata {0, __hostFunction_NativeBlobModuleSpecJSI_addNetworkingHandler};
         
@@ -748,8 +560,8 @@ namespace facebook {
     }
 
 
-    NativeBugReportingSpecJSI::NativeBugReportingSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeBugReportingSpecJSI::NativeBugReportingSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("BugReporting", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["startReportAProblemFlow"] = MethodMetadata {0, __hostFunction_NativeBugReportingSpecJSI_startReportAProblemFlow};
         
@@ -758,6 +570,40 @@ namespace facebook {
         
         
         methodMap_["setCategoryID"] = MethodMetadata {1, __hostFunction_NativeBugReportingSpecJSI_setCategoryID};
+        
+        
+
+    }
+
+  } // namespace react
+} // namespace facebook
+namespace facebook {
+  namespace react {
+
+    
+    static facebook::jsi::Value __hostFunction_NativeCameraRollManagerSpecJSI_getPhotos(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, PromiseKind, "getPhotos", "(Lcom/facebook/react/bridge/ReadableMap;Lcom/facebook/react/bridge/Promise;)V", args, count);
+    }
+
+    static facebook::jsi::Value __hostFunction_NativeCameraRollManagerSpecJSI_saveToCameraRoll(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, PromiseKind, "saveToCameraRoll", "(Ljava/lang/String;Ljava/lang/String;Lcom/facebook/react/bridge/Promise;)V", args, count);
+    }
+
+    static facebook::jsi::Value __hostFunction_NativeCameraRollManagerSpecJSI_deletePhotos(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, PromiseKind, "deletePhotos", "(Lcom/facebook/react/bridge/ReadableArray;Lcom/facebook/react/bridge/Promise;)V", args, count);
+    }
+
+
+    NativeCameraRollManagerSpecJSI::NativeCameraRollManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("CameraRollManager", instance, jsInvoker, nativeInvoker) {
+        
+        methodMap_["getPhotos"] = MethodMetadata {1, __hostFunction_NativeCameraRollManagerSpecJSI_getPhotos};
+        
+        
+        methodMap_["saveToCameraRoll"] = MethodMetadata {2, __hostFunction_NativeCameraRollManagerSpecJSI_saveToCameraRoll};
+        
+        
+        methodMap_["deletePhotos"] = MethodMetadata {1, __hostFunction_NativeCameraRollManagerSpecJSI_deletePhotos};
         
         
 
@@ -778,8 +624,8 @@ namespace facebook {
     }
 
 
-    NativeClipboardSpecJSI::NativeClipboardSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeClipboardSpecJSI::NativeClipboardSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("Clipboard", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getString"] = MethodMetadata {0, __hostFunction_NativeClipboardSpecJSI_getString};
         
@@ -801,8 +647,8 @@ namespace facebook {
     }
 
 
-    NativeDatePickerAndroidSpecJSI::NativeDatePickerAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDatePickerAndroidSpecJSI::NativeDatePickerAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DatePickerAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["open"] = MethodMetadata {1, __hostFunction_NativeDatePickerAndroidSpecJSI_open};
         
@@ -825,8 +671,8 @@ namespace facebook {
     }
 
 
-    NativeDevLoadingViewSpecJSI::NativeDevLoadingViewSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDevLoadingViewSpecJSI::NativeDevLoadingViewSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DevLoadingView", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["showMessage"] = MethodMetadata {3, __hostFunction_NativeDevLoadingViewSpecJSI_showMessage};
         
@@ -864,8 +710,8 @@ namespace facebook {
     }
 
 
-    NativeDevMenuSpecJSI::NativeDevMenuSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDevMenuSpecJSI::NativeDevMenuSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DevMenu", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["show"] = MethodMetadata {0, __hostFunction_NativeDevMenuSpecJSI_show};
         
@@ -936,8 +782,8 @@ namespace facebook {
     }
 
 
-    NativeDevSettingsSpecJSI::NativeDevSettingsSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDevSettingsSpecJSI::NativeDevSettingsSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DevSettings", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["reload"] = MethodMetadata {0, __hostFunction_NativeDevSettingsSpecJSI_reload};
         
@@ -981,33 +827,13 @@ namespace facebook {
   namespace react {
 
     
-    static facebook::jsi::Value __hostFunction_NativeDevSplitBundleLoaderSpecJSI_loadBundle(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
-      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, PromiseKind, "loadBundle", "(Ljava/lang/String;Lcom/facebook/react/bridge/Promise;)V", args, count);
-    }
-
-
-    NativeDevSplitBundleLoaderSpecJSI::NativeDevSplitBundleLoaderSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
-        
-        methodMap_["loadBundle"] = MethodMetadata {1, __hostFunction_NativeDevSplitBundleLoaderSpecJSI_loadBundle};
-        
-        
-
-    }
-
-  } // namespace react
-} // namespace facebook
-namespace facebook {
-  namespace react {
-
-    
     static facebook::jsi::Value __hostFunction_NativeDeviceEventManagerSpecJSI_invokeDefaultBackPressHandler(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
       return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "invokeDefaultBackPressHandler", "()V", args, count);
     }
 
 
-    NativeDeviceEventManagerSpecJSI::NativeDeviceEventManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDeviceEventManagerSpecJSI::NativeDeviceEventManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DeviceEventManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["invokeDefaultBackPressHandler"] = MethodMetadata {0, __hostFunction_NativeDeviceEventManagerSpecJSI_invokeDefaultBackPressHandler};
         
@@ -1026,8 +852,8 @@ namespace facebook {
     }
 
 
-    NativeDeviceInfoSpecJSI::NativeDeviceInfoSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDeviceInfoSpecJSI::NativeDeviceInfoSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DeviceInfo", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getConstants"] = MethodMetadata {0, __hostFunction_NativeDeviceInfoSpecJSI_getConstants};
         
@@ -1050,8 +876,8 @@ namespace facebook {
     }
 
 
-    NativeDialogManagerAndroidSpecJSI::NativeDialogManagerAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeDialogManagerAndroidSpecJSI::NativeDialogManagerAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("DialogManagerAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["showAlert"] = MethodMetadata {3, __hostFunction_NativeDialogManagerAndroidSpecJSI_showAlert};
         
@@ -1089,8 +915,8 @@ namespace facebook {
     }
 
 
-    NativeExceptionsManagerSpecJSI::NativeExceptionsManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeExceptionsManagerSpecJSI::NativeExceptionsManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ExceptionsManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["reportFatalException"] = MethodMetadata {3, __hostFunction_NativeExceptionsManagerSpecJSI_reportFatalException};
         
@@ -1125,8 +951,8 @@ namespace facebook {
     }
 
 
-    NativeFileReaderModuleSpecJSI::NativeFileReaderModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeFileReaderModuleSpecJSI::NativeFileReaderModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("FileReaderModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["readAsDataURL"] = MethodMetadata {1, __hostFunction_NativeFileReaderModuleSpecJSI_readAsDataURL};
         
@@ -1160,8 +986,8 @@ namespace facebook {
     }
 
 
-    NativeFrameRateLoggerSpecJSI::NativeFrameRateLoggerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeFrameRateLoggerSpecJSI::NativeFrameRateLoggerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("FrameRateLogger", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["setGlobalOptions"] = MethodMetadata {1, __hostFunction_NativeFrameRateLoggerSpecJSI_setGlobalOptions};
         
@@ -1193,8 +1019,8 @@ namespace facebook {
     }
 
 
-    NativeHeadlessJsTaskSupportSpecJSI::NativeHeadlessJsTaskSupportSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeHeadlessJsTaskSupportSpecJSI::NativeHeadlessJsTaskSupportSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("HeadlessJsTaskSupport", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["notifyTaskFinished"] = MethodMetadata {1, __hostFunction_NativeHeadlessJsTaskSupportSpecJSI_notifyTaskFinished};
         
@@ -1228,8 +1054,8 @@ namespace facebook {
     }
 
 
-    NativeI18nManagerSpecJSI::NativeI18nManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeI18nManagerSpecJSI::NativeI18nManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("I18nManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["allowRTL"] = MethodMetadata {1, __hostFunction_NativeI18nManagerSpecJSI_allowRTL};
         
@@ -1257,8 +1083,8 @@ namespace facebook {
     }
 
 
-    NativeImageEditorSpecJSI::NativeImageEditorSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeImageEditorSpecJSI::NativeImageEditorSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ImageEditor", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["cropImage"] = MethodMetadata {4, __hostFunction_NativeImageEditorSpecJSI_cropImage};
         
@@ -1293,8 +1119,8 @@ namespace facebook {
     }
 
 
-    NativeImageLoaderAndroidSpecJSI::NativeImageLoaderAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeImageLoaderAndroidSpecJSI::NativeImageLoaderAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ImageLoaderAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["abortRequest"] = MethodMetadata {1, __hostFunction_NativeImageLoaderAndroidSpecJSI_abortRequest};
         
@@ -1337,8 +1163,8 @@ namespace facebook {
     }
 
 
-    NativeImageLoaderIOSSpecJSI::NativeImageLoaderIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeImageLoaderIOSSpecJSI::NativeImageLoaderIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ImageLoaderIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getSize"] = MethodMetadata {1, __hostFunction_NativeImageLoaderIOSSpecJSI_getSize};
         
@@ -1386,8 +1212,8 @@ namespace facebook {
     }
 
 
-    NativeImagePickerIOSSpecJSI::NativeImagePickerIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeImagePickerIOSSpecJSI::NativeImagePickerIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ImagePickerIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["canRecordVideos"] = MethodMetadata {1, __hostFunction_NativeImagePickerIOSSpecJSI_canRecordVideos};
         
@@ -1433,8 +1259,8 @@ namespace facebook {
     }
 
 
-    NativeImageStoreSpecJSI::NativeImageStoreSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeImageStoreSpecJSI::NativeImageStoreSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ImageStore", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getBase64ForTag"] = MethodMetadata {3, __hostFunction_NativeImageStoreSpecJSI_getBase64ForTag};
         
@@ -1462,8 +1288,8 @@ namespace facebook {
     }
 
 
-    NativeJSCHeapCaptureSpecJSI::NativeJSCHeapCaptureSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeJSCHeapCaptureSpecJSI::NativeJSCHeapCaptureSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("JSCHeapCapture", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["captureComplete"] = MethodMetadata {2, __hostFunction_NativeJSCHeapCaptureSpecJSI_captureComplete};
         
@@ -1482,8 +1308,8 @@ namespace facebook {
     }
 
 
-    NativeJSCSamplingProfilerSpecJSI::NativeJSCSamplingProfilerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeJSCSamplingProfilerSpecJSI::NativeJSCSamplingProfilerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("JSCSamplingProfiler", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["operationComplete"] = MethodMetadata {3, __hostFunction_NativeJSCSamplingProfilerSpecJSI_operationComplete};
         
@@ -1510,8 +1336,8 @@ namespace facebook {
     }
 
 
-    NativeJSDevSupportSpecJSI::NativeJSDevSupportSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeJSDevSupportSpecJSI::NativeJSDevSupportSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("JSDevSupport", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["onSuccess"] = MethodMetadata {1, __hostFunction_NativeJSDevSupportSpecJSI_onSuccess};
         
@@ -1540,8 +1366,8 @@ namespace facebook {
     }
 
 
-    NativeKeyboardObserverSpecJSI::NativeKeyboardObserverSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeKeyboardObserverSpecJSI::NativeKeyboardObserverSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("KeyboardObserver", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["addListener"] = MethodMetadata {1, __hostFunction_NativeKeyboardObserverSpecJSI_addListener};
         
@@ -1587,8 +1413,8 @@ namespace facebook {
     }
 
 
-    NativeLinkingSpecJSI::NativeLinkingSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeLinkingSpecJSI::NativeLinkingSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("Linking", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getInitialURL"] = MethodMetadata {0, __hostFunction_NativeLinkingSpecJSI_getInitialURL};
         
@@ -1629,8 +1455,8 @@ namespace facebook {
     }
 
 
-    NativeLogBoxSpecJSI::NativeLogBoxSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeLogBoxSpecJSI::NativeLogBoxSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("LogBox", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["show"] = MethodMetadata {0, __hostFunction_NativeLogBoxSpecJSI_show};
         
@@ -1656,8 +1482,8 @@ namespace facebook {
     }
 
 
-    NativeModalManagerSpecJSI::NativeModalManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeModalManagerSpecJSI::NativeModalManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ModalManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["addListener"] = MethodMetadata {1, __hostFunction_NativeModalManagerSpecJSI_addListener};
         
@@ -1695,8 +1521,8 @@ namespace facebook {
     }
 
 
-    NativeNetworkingAndroidSpecJSI::NativeNetworkingAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeNetworkingAndroidSpecJSI::NativeNetworkingAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("NetworkingAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["sendRequest"] = MethodMetadata {9, __hostFunction_NativeNetworkingAndroidSpecJSI_sendRequest};
         
@@ -1743,8 +1569,8 @@ namespace facebook {
     }
 
 
-    NativeNetworkingIOSSpecJSI::NativeNetworkingIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeNetworkingIOSSpecJSI::NativeNetworkingIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("NetworkingIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["sendRequest"] = MethodMetadata {2, __hostFunction_NativeNetworkingIOSSpecJSI_sendRequest};
         
@@ -1787,8 +1613,8 @@ namespace facebook {
     }
 
 
-    NativePermissionsAndroidSpecJSI::NativePermissionsAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativePermissionsAndroidSpecJSI::NativePermissionsAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("PermissionsAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["checkPermission"] = MethodMetadata {1, __hostFunction_NativePermissionsAndroidSpecJSI_checkPermission};
         
@@ -1820,8 +1646,8 @@ namespace facebook {
     }
 
 
-    NativePlatformConstantsAndroidSpecJSI::NativePlatformConstantsAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativePlatformConstantsAndroidSpecJSI::NativePlatformConstantsAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("PlatformConstantsAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getAndroidID"] = MethodMetadata {0, __hostFunction_NativePlatformConstantsAndroidSpecJSI_getAndroidID};
         
@@ -1843,8 +1669,8 @@ namespace facebook {
     }
 
 
-    NativePlatformConstantsIOSSpecJSI::NativePlatformConstantsIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativePlatformConstantsIOSSpecJSI::NativePlatformConstantsIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("PlatformConstantsIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getConstants"] = MethodMetadata {0, __hostFunction_NativePlatformConstantsIOSSpecJSI_getConstants};
         
@@ -1927,8 +1753,8 @@ namespace facebook {
     }
 
 
-    NativePushNotificationManagerIOSSpecJSI::NativePushNotificationManagerIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativePushNotificationManagerIOSSpecJSI::NativePushNotificationManagerIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("PushNotificationManagerIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["onFinishRemoteNotification"] = MethodMetadata {2, __hostFunction_NativePushNotificationManagerIOSSpecJSI_onFinishRemoteNotification};
         
@@ -1999,8 +1825,8 @@ namespace facebook {
     }
 
 
-    NativeRedBoxSpecJSI::NativeRedBoxSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeRedBoxSpecJSI::NativeRedBoxSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("RedBox", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["setExtraData"] = MethodMetadata {2, __hostFunction_NativeRedBoxSpecJSI_setExtraData};
         
@@ -2026,8 +1852,8 @@ namespace facebook {
     }
 
 
-    NativeSegmentFetcherSpecJSI::NativeSegmentFetcherSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeSegmentFetcherSpecJSI::NativeSegmentFetcherSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("SegmentFetcher", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["fetchSegment"] = MethodMetadata {3, __hostFunction_NativeSegmentFetcherSpecJSI_fetchSegment};
         
@@ -2057,8 +1883,8 @@ namespace facebook {
     }
 
 
-    NativeSettingsManagerSpecJSI::NativeSettingsManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeSettingsManagerSpecJSI::NativeSettingsManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("SettingsManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["setValues"] = MethodMetadata {1, __hostFunction_NativeSettingsManagerSpecJSI_setValues};
         
@@ -2083,8 +1909,8 @@ namespace facebook {
     }
 
 
-    NativeShareModuleSpecJSI::NativeShareModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeShareModuleSpecJSI::NativeShareModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ShareModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["share"] = MethodMetadata {2, __hostFunction_NativeShareModuleSpecJSI_share};
         
@@ -2103,8 +1929,8 @@ namespace facebook {
     }
 
 
-    NativeSoundManagerSpecJSI::NativeSoundManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeSoundManagerSpecJSI::NativeSoundManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("SoundManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["playTouchSound"] = MethodMetadata {0, __hostFunction_NativeSoundManagerSpecJSI_playTouchSound};
         
@@ -2123,8 +1949,8 @@ namespace facebook {
     }
 
 
-    NativeSourceCodeSpecJSI::NativeSourceCodeSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeSourceCodeSpecJSI::NativeSourceCodeSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("SourceCode", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getConstants"] = MethodMetadata {0, __hostFunction_NativeSourceCodeSpecJSI_getConstants};
         
@@ -2159,8 +1985,8 @@ namespace facebook {
     }
 
 
-    NativeStatusBarManagerAndroidSpecJSI::NativeStatusBarManagerAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeStatusBarManagerAndroidSpecJSI::NativeStatusBarManagerAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("StatusBarManagerAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["setColor"] = MethodMetadata {2, __hostFunction_NativeStatusBarManagerAndroidSpecJSI_setColor};
         
@@ -2215,8 +2041,8 @@ namespace facebook {
     }
 
 
-    NativeStatusBarManagerIOSSpecJSI::NativeStatusBarManagerIOSSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeStatusBarManagerIOSSpecJSI::NativeStatusBarManagerIOSSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("StatusBarManagerIOS", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getHeight"] = MethodMetadata {1, __hostFunction_NativeStatusBarManagerIOSSpecJSI_getHeight};
         
@@ -2257,13 +2083,33 @@ namespace facebook {
     }
 
 
-    NativeTVNavigationEventEmitterSpecJSI::NativeTVNavigationEventEmitterSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeTVNavigationEventEmitterSpecJSI::NativeTVNavigationEventEmitterSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("TVNavigationEventEmitter", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["addListener"] = MethodMetadata {1, __hostFunction_NativeTVNavigationEventEmitterSpecJSI_addListener};
         
         
         methodMap_["removeListeners"] = MethodMetadata {1, __hostFunction_NativeTVNavigationEventEmitterSpecJSI_removeListeners};
+        
+        
+
+    }
+
+  } // namespace react
+} // namespace facebook
+namespace facebook {
+  namespace react {
+
+    
+    static facebook::jsi::Value __hostFunction_NativeTimePickerAndroidSpecJSI_open(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, PromiseKind, "open", "(Lcom/facebook/react/bridge/ReadableMap;Lcom/facebook/react/bridge/Promise;)V", args, count);
+    }
+
+
+    NativeTimePickerAndroidSpecJSI::NativeTimePickerAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("TimePickerAndroid", instance, jsInvoker, nativeInvoker) {
+        
+        methodMap_["open"] = MethodMetadata {1, __hostFunction_NativeTimePickerAndroidSpecJSI_open};
         
         
 
@@ -2288,8 +2134,8 @@ namespace facebook {
     }
 
 
-    NativeTimingSpecJSI::NativeTimingSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeTimingSpecJSI::NativeTimingSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("Timing", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["createTimer"] = MethodMetadata {4, __hostFunction_NativeTimingSpecJSI_createTimer};
         
@@ -2326,8 +2172,8 @@ namespace facebook {
     }
 
 
-    NativeToastAndroidSpecJSI::NativeToastAndroidSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeToastAndroidSpecJSI::NativeToastAndroidSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("ToastAndroid", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["show"] = MethodMetadata {2, __hostFunction_NativeToastAndroidSpecJSI_show};
         
@@ -2356,6 +2202,10 @@ namespace facebook {
 
     static facebook::jsi::Value __hostFunction_NativeUIManagerSpecJSI_getDefaultEventTypes(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
       return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, ArrayKind, "getDefaultEventTypes", "()Lcom/facebook/react/bridge/WritableArray;", args, count);
+    }
+
+    static facebook::jsi::Value __hostFunction_NativeUIManagerSpecJSI_playTouchSound(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
+      return static_cast<JavaTurboModule&>(turboModule).invokeJavaMethod(rt, VoidKind, "playTouchSound", "()V", args, count);
     }
 
     static facebook::jsi::Value __hostFunction_NativeUIManagerSpecJSI_lazilyLoadView(facebook::jsi::Runtime& rt, TurboModule &turboModule, const facebook::jsi::Value* args, size_t count) {
@@ -2455,13 +2305,16 @@ namespace facebook {
     }
 
 
-    NativeUIManagerSpecJSI::NativeUIManagerSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeUIManagerSpecJSI::NativeUIManagerSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("UIManager", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["getConstantsForViewManager"] = MethodMetadata {1, __hostFunction_NativeUIManagerSpecJSI_getConstantsForViewManager};
         
         
         methodMap_["getDefaultEventTypes"] = MethodMetadata {0, __hostFunction_NativeUIManagerSpecJSI_getDefaultEventTypes};
+        
+        
+        methodMap_["playTouchSound"] = MethodMetadata {0, __hostFunction_NativeUIManagerSpecJSI_playTouchSound};
         
         
         methodMap_["lazilyLoadView"] = MethodMetadata {1, __hostFunction_NativeUIManagerSpecJSI_lazilyLoadView};
@@ -2558,8 +2411,8 @@ namespace facebook {
     }
 
 
-    NativeVibrationSpecJSI::NativeVibrationSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeVibrationSpecJSI::NativeVibrationSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("Vibration", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["vibrate"] = MethodMetadata {1, __hostFunction_NativeVibrationSpecJSI_vibrate};
         
@@ -2608,8 +2461,8 @@ namespace facebook {
     }
 
 
-    NativeWebSocketModuleSpecJSI::NativeWebSocketModuleSpecJSI(const JavaTurboModule::InitParams &params)
-      : JavaTurboModule(params) {
+    NativeWebSocketModuleSpecJSI::NativeWebSocketModuleSpecJSI(jni::alias_ref<JTurboModule> instance, std::shared_ptr<CallInvoker> jsInvoker, std::shared_ptr<CallInvoker> nativeInvoker)
+      : JavaTurboModule("WebSocketModule", instance, jsInvoker, nativeInvoker) {
         
         methodMap_["connect"] = MethodMetadata {4, __hostFunction_NativeWebSocketModuleSpecJSI_connect};
         

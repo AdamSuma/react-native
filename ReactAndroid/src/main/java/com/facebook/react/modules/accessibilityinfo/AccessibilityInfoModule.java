@@ -90,10 +90,12 @@ public class AccessibilityInfoModule extends NativeAccessibilityInfoSpec
     return "AccessibilityInfo";
   }
 
-  @TargetApi(Build.VERSION_CODES.KITKAT)
   private boolean getIsReduceMotionEnabledValue() {
     String value =
-        Settings.Global.getString(mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1
+            ? null
+            : Settings.Global.getString(
+                mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
 
     return value != null && value.equals("0.0");
   }
@@ -137,10 +139,11 @@ public class AccessibilityInfoModule extends NativeAccessibilityInfoSpec
   }
 
   @Override
-  @TargetApi(Build.VERSION_CODES.KITKAT)
   public void onHostResume() {
-    mAccessibilityManager.addTouchExplorationStateChangeListener(
-        mTouchExplorationStateChangeListener);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      mAccessibilityManager.addTouchExplorationStateChangeListener(
+          mTouchExplorationStateChangeListener);
+    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
       Uri transitionUri = Settings.Global.getUriFor(Settings.Global.TRANSITION_ANIMATION_SCALE);
@@ -152,12 +155,15 @@ public class AccessibilityInfoModule extends NativeAccessibilityInfoSpec
   }
 
   @Override
-  @TargetApi(Build.VERSION_CODES.KITKAT)
   public void onHostPause() {
-    mAccessibilityManager.removeTouchExplorationStateChangeListener(
-        mTouchExplorationStateChangeListener);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      mAccessibilityManager.removeTouchExplorationStateChangeListener(
+          mTouchExplorationStateChangeListener);
+    }
 
-    mContentResolver.unregisterContentObserver(animationScaleObserver);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      mContentResolver.unregisterContentObserver(animationScaleObserver);
+    }
   }
 
   @Override

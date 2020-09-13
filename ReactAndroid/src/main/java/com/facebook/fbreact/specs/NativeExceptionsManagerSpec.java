@@ -30,6 +30,10 @@ public abstract class NativeExceptionsManagerSpec extends ReactContextBaseJavaMo
   }
 
   @ReactMethod
+  public abstract void updateExceptionMessage(String message, ReadableArray stack,
+      double exceptionId);
+
+  @ReactMethod
   public void reportException(ReadableMap data) {
   }
 
@@ -39,8 +43,4 @@ public abstract class NativeExceptionsManagerSpec extends ReactContextBaseJavaMo
 
   @ReactMethod
   public abstract void reportSoftException(String message, ReadableArray stack, double exceptionId);
-
-  @ReactMethod
-  public abstract void updateExceptionMessage(String message, ReadableArray stack,
-      double exceptionId);
 }

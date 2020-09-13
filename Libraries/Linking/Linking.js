@@ -5,16 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow strict-local
+ * @flow
  */
 
 'use strict';
 
-import NativeEventEmitter from '../EventEmitter/NativeEventEmitter';
-import InteractionManager from '../Interaction/InteractionManager';
-import Platform from '../Utilities/Platform';
+const InteractionManager = require('../Interaction/InteractionManager');
+const NativeEventEmitter = require('../EventEmitter/NativeEventEmitter');
+const Platform = require('../Utilities/Platform');
+
+const invariant = require('invariant');
+
 import NativeLinking from './NativeLinking';
-import invariant from 'invariant';
 
 /**
  * `Linking` gives you a general interface to interact with both incoming
@@ -33,7 +35,7 @@ class Linking extends NativeEventEmitter {
    *
    * See https://reactnative.dev/docs/linking.html#addeventlistener
    */
-  addEventListener<T>(type: string, handler: T) {
+  addEventListener(type: string, handler: Function) {
     this.addListener(type, handler);
   }
 
@@ -42,7 +44,7 @@ class Linking extends NativeEventEmitter {
    *
    * See https://reactnative.dev/docs/linking.html#removeeventlistener
    */
-  removeEventListener<T>(type: string, handler: T) {
+  removeEventListener(type: string, handler: Function) {
     this.removeListener(type, handler);
   }
 
@@ -51,7 +53,7 @@ class Linking extends NativeEventEmitter {
    *
    * See https://reactnative.dev/docs/linking.html#openurl
    */
-  openURL(url: string): Promise<void> {
+  openURL(url: string): Promise<any> {
     this._validateURL(url);
     return NativeLinking.openURL(url);
   }
@@ -71,7 +73,7 @@ class Linking extends NativeEventEmitter {
    *
    * See https://reactnative.dev/docs/linking.html#opensettings
    */
-  openSettings(): Promise<void> {
+  openSettings(): Promise<any> {
     return NativeLinking.openSettings();
   }
 

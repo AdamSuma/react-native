@@ -8,7 +8,6 @@
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridge.h>
-#import <React/RCTJSInvokerModule.h>
 
 typedef NS_ENUM(NSInteger, RCTTextEventType) {
   RCTTextEventTypeFocus,
@@ -70,17 +69,11 @@ RCT_EXTERN NSString *RCTNormalizeInputEventName(NSString *eventName);
 
 @end
 
-@protocol RCTJSDispatcherModule
-
-@property (nonatomic, copy) void (^dispatchToJSThread)(dispatch_block_t block);
-
-@end
-
 /**
  * This class wraps the -[RCTBridge enqueueJSCall:args:] method, and
  * provides some convenience methods for generating event calls.
  */
-@interface RCTEventDispatcher : NSObject <RCTBridgeModule, RCTJSDispatcherModule, RCTJSInvokerModule>
+@interface RCTEventDispatcher : NSObject <RCTBridgeModule>
 
 /**
  * Deprecated, do not use.

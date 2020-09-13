@@ -7,24 +7,27 @@
 
 #import "RCTImageComponentView.h"
 
-#import <React/RCTConversions.h>
-#import <React/RCTImageBlurUtils.h>
+#import <React/RCTImageResponseDelegate.h>
 #import <React/RCTImageResponseObserverProxy.h>
-#import <react/renderer/components/image/ImageComponentDescriptor.h>
-#import <react/renderer/components/image/ImageEventEmitter.h>
-#import <react/renderer/components/image/ImageProps.h>
-#import <react/renderer/imagemanager/ImageInstrumentation.h>
-#import <react/renderer/imagemanager/ImageRequest.h>
-#import <react/renderer/imagemanager/RCTImageInstrumentationProxy.h>
-#import <react/renderer/imagemanager/RCTImagePrimitivesConversions.h>
+#import <react/components/image/ImageComponentDescriptor.h>
+#import <react/components/image/ImageEventEmitter.h>
+#import <react/components/image/ImageProps.h>
+#import <react/imagemanager/ImageInstrumentation.h>
+#import <react/imagemanager/ImageRequest.h>
+#import <react/imagemanager/RCTImageInstrumentationProxy.h>
+#import <react/imagemanager/RCTImagePrimitivesConversions.h>
+
+#import "RCTConversions.h"
+#import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
 
-@interface RCTImageComponentView ()
+@interface RCTImageComponentView () <RCTImageResponseDelegate>
 @end
 
 @implementation RCTImageComponentView {
-  ImageShadowNode::ConcreteStateTeller _stateTeller;
+  UIImageView *_imageView;
+  ImageShadowNode::ConcreteState::Shared _state;
   ImageResponseObserverCoordinator const *_coordinator;
   RCTImageResponseObserverProxy _imageResponseObserverProxy;
 }
@@ -38,8 +41,6 @@ using namespace facebook::react;
     _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
     _imageView.clipsToBounds = YES;
     _imageView.contentMode = (UIViewContentMode)RCTResizeModeFromImageResizeMode(defaultProps->resizeMode);
-    _imageView.layer.minificationFilter = kCAFilterTrilinear;
-    _imageView.layer.magnificationFilter = kCAFilterTrilinear;
 
     _imageResponseObserverProxy = RCTImageResponseObserverProxy(self);
 
@@ -82,9 +83,9 @@ using namespace facebook::react;
 
 - (void)updateState:(State::Shared const &)state oldState:(State::Shared const &)oldState
 {
-  _stateTeller.setConcreteState(state);
+  _state = std::static_pointer_cast<ImageShadowNode::ConcreteState const>(state);
   auto _oldState = std::static_pointer_cast<ImageShadowNode::ConcreteState const>(oldState);
-  auto data = _stateTeller.getData().value();
+  auto data = _state->getData();
 
   // This call (setting `coordinator`) must be unconditional (at the same block as setting `State`)
   // because the setter stores a raw pointer to object that `State` owns.
@@ -99,6 +100,11 @@ using namespace facebook::react;
 
     // TODO (T58941612): Tracking for visibility should be done directly on this class.
     // For now, we consolidate instrumentation logic in the image loader, so that pre-Fabric gets the same treatment.
+    auto instrumentation = std::static_pointer_cast<RCTImageInstrumentationProxy const>(
+        data.getImageRequest().getSharedImageInstrumentation());
+    if (instrumentation) {
+      instrumentation->trackNativeImageView(self);
+    }
   }
 }
 
@@ -118,7 +124,7 @@ using namespace facebook::react;
   [super prepareForRecycle];
   self.coordinator = nullptr;
   _imageView.image = nil;
-  _stateTeller.invalidate();
+  _state.reset();
 }
 
 - (void)dealloc
@@ -128,9 +134,9 @@ using namespace facebook::react;
 
 #pragma mark - RCTImageResponseDelegate
 
-- (void)didReceiveImage:(UIImage *)image metadata:(id)metadata fromObserver:(void const *)observer
+- (void)didReceiveImage:(UIImage *)image fromObserver:(void const *)observer
 {
-  if (!_eventEmitter || !_stateTeller.isValid()) {
+  if (!_eventEmitter || !_state) {
     // Notifications are delivered asynchronously and might arrive after the view is already recycled.
     // In the future, we should incorporate an `EventEmitter` into a separate object owned by `ImageRequest` or `State`.
     // See for more info: T46311063.
@@ -155,30 +161,17 @@ using namespace facebook::react;
                                   resizingMode:UIImageResizingModeStretch];
   }
 
-  void (^didSetImage)() = ^() {
-    auto data = self->_stateTeller.getData();
-    if (!data.hasValue()) {
-      return;
-    }
-    auto instrumentation = std::static_pointer_cast<RCTImageInstrumentationProxy const>(
-        data.value().getImageRequest().getSharedImageInstrumentation());
-    if (instrumentation) {
-      instrumentation->didSetImage();
-    }
-  };
+  self->_imageView.image = image;
 
-  if (imageProps.blurRadius > __FLT_EPSILON__) {
-    // Blur on a background thread to avoid blocking interaction.
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      UIImage *blurredImage = RCTBlurredImageWithRadius(image, imageProps.blurRadius);
-      RCTExecuteOnMainQueue(^{
-        self->_imageView.image = blurredImage;
-        didSetImage();
-      });
-    });
-  } else {
-    self->_imageView.image = image;
-    didSetImage();
+  // Apply trilinear filtering to smooth out mis-sized images.
+  self->_imageView.layer.minificationFilter = kCAFilterTrilinear;
+  self->_imageView.layer.magnificationFilter = kCAFilterTrilinear;
+
+  auto data = _state->getData();
+  auto instrumentation = std::static_pointer_cast<RCTImageInstrumentationProxy const>(
+      data.getImageRequest().getSharedImageInstrumentation());
+  if (instrumentation) {
+    instrumentation->didSetImage();
   }
 }
 
@@ -204,17 +197,6 @@ using namespace facebook::react;
 }
 
 @end
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Can't the import generated Plugin.h because plugins are not in this BUCK target
-Class<RCTComponentViewProtocol> RCTImageCls(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 Class<RCTComponentViewProtocol> RCTImageCls(void)
 {

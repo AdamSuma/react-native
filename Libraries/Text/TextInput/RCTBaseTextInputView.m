@@ -302,18 +302,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
   }
 }
 
-- (void)setShowSoftInputOnFocus:(BOOL)showSoftInputOnFocus
-{
-  (void)_showSoftInputOnFocus;
-  if (showSoftInputOnFocus) {
-    // Resets to default keyboard.
-    self.backedTextInputView.inputView = nil;
-  } else {
-    // Hides keyboard, but keeps blinking cursor.
-    self.backedTextInputView.inputView = [[UIView alloc] init];
-  }
-}
-
 #pragma mark - RCTBackedTextInputDelegate
 
 - (BOOL)textInputShouldBeginEditing
@@ -333,7 +321,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   [_eventDispatcher sendTextEventWithType:RCTTextEventTypeFocus
                                  reactTag:self.reactTag
-                                     text:[self.backedTextInputView.attributedText.string copy]
+                                     text:self.backedTextInputView.attributedText.string
                                       key:nil
                                eventCount:_nativeEventCount];
 }
@@ -347,13 +335,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 {
   [_eventDispatcher sendTextEventWithType:RCTTextEventTypeEnd
                                  reactTag:self.reactTag
-                                     text:[self.backedTextInputView.attributedText.string copy]
+                                     text:self.backedTextInputView.attributedText.string
                                       key:nil
                                eventCount:_nativeEventCount];
 
   [_eventDispatcher sendTextEventWithType:RCTTextEventTypeBlur
                                  reactTag:self.reactTag
-                                     text:[self.backedTextInputView.attributedText.string copy]
+                                     text:self.backedTextInputView.attributedText.string
                                       key:nil
                                eventCount:_nativeEventCount];
 }
@@ -367,7 +355,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
   // (no connection to any specific "submitting" process).
   [_eventDispatcher sendTextEventWithType:RCTTextEventTypeSubmit
                                  reactTag:self.reactTag
-                                     text:[self.backedTextInputView.attributedText.string copy]
+                                     text:self.backedTextInputView.attributedText.string
                                       key:nil
                                eventCount:_nativeEventCount];
 
@@ -422,7 +410,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
     }
   }
 
-  NSString *previousText = [backedTextInputView.attributedText.string copy] ?: @"";
+  NSString *previousText = backedTextInputView.attributedText.string ?: @"";
 
   if (range.location + range.length > backedTextInputView.attributedText.string.length) {
     _predictedText = backedTextInputView.attributedText.string;
@@ -468,7 +456,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   if (_onChange) {
     _onChange(@{
-       @"text": [self.attributedText.string copy],
+       @"text": self.attributedText.string,
        @"target": self.reactTag,
        @"eventCount": @(_nativeEventCount),
     });
@@ -596,7 +584,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
 
   // These keyboard types (all are number pads) don't have a "Done" button by default,
   // so we create an `inputAccessoryView` with this button for them.
-  BOOL shouldHaveInputAccesoryView =
+  BOOL shouldHaveInputAccesoryView;
+  if (@available(iOS 10.0, *)) {
+      shouldHaveInputAccesoryView =
       (
        keyboardType == UIKeyboardTypeNumberPad ||
        keyboardType == UIKeyboardTypePhonePad ||
@@ -604,6 +594,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
        keyboardType == UIKeyboardTypeASCIICapableNumberPad
       ) &&
       textInputView.returnKeyType == UIReturnKeyDone;
+  } else {
+      shouldHaveInputAccesoryView =
+      (
+       keyboardType == UIKeyboardTypeNumberPad ||
+       keyboardType == UIKeyboardTypePhonePad ||
+       keyboardType == UIKeyboardTypeDecimalPad
+      ) &&
+      textInputView.returnKeyType == UIReturnKeyDone;
+  }
 
   if (_hasInputAccesoryView == shouldHaveInputAccesoryView) {
     return;

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow strict
+ * @flow
  */
 
 'use strict';
@@ -16,12 +16,14 @@ const invariant = require('invariant');
 type SimpleTask = {
   name: string,
   run: () => void,
+  ...
 };
 type PromiseTask = {
   name: string,
-  gen: () => Promise<void>,
+  gen: () => Promise<any>,
+  ...
 };
-export type Task = SimpleTask | PromiseTask | (() => void);
+export type Task = Function | SimpleTask | PromiseTask;
 
 const DEBUG: false = false;
 
@@ -99,10 +101,10 @@ class TaskQueue {
     if (queue.length) {
       const task = queue.shift();
       try {
-        if (typeof task === 'object' && task.gen) {
+        if (task.gen) {
           DEBUG && infoLog('TaskQueue: genPromise for task ' + task.name);
-          this._genPromise(task);
-        } else if (typeof task === 'object' && task.run) {
+          this._genPromise((task: any)); // Rather than annoying tagged union
+        } else if (task.run) {
           DEBUG && infoLog('TaskQueue: run task ' + task.name);
           task.run();
         } else {
@@ -170,7 +172,9 @@ class TaskQueue {
         this.hasTasksToProcess() && this._onMoreTasks();
       })
       .catch(ex => {
-        ex.message = `TaskQueue: Error resolving Promise in task ${task.name}: ${ex.message}`;
+        ex.message = `TaskQueue: Error resolving Promise in task ${
+          task.name
+        }: ${ex.message}`;
         throw ex;
       })
       .done();

@@ -222,7 +222,7 @@ RCT_EXPORT_MODULE()
   return [_dataSource settingForKey:key];
 }
 
-- (BOOL)isDeviceDebuggingAvailable
+- (BOOL)isNuclideDebuggingAvailable
 {
 #if RCT_ENABLE_INSPECTOR
   return self.bridge.isInspectable;
@@ -403,7 +403,7 @@ RCT_EXPORT_METHOD(addMenuItem : (NSString *)title)
 #endif
 }
 
-- (void)setupHMRClientWithBundleURL:(NSURL *)bundleURL
+- (void)setupHotModuleReloadClientIfApplicableForURL:(NSURL *)bundleURL
 {
   if (bundleURL && !bundleURL.fileURL) { // isHotLoadingAvailable check
     NSString *const path = [bundleURL.path substringFromIndex:1]; // Strip initial slash.
@@ -416,20 +416,6 @@ RCT_EXPORT_METHOD(addMenuItem : (NSString *)title)
                       completion:NULL];
     } else {
       self.invokeJS(@"HMRClient", @"setup", @[ @"ios", path, host, RCTNullIfNil(port), @(YES) ]);
-    }
-  }
-}
-
-- (void)setupHMRClientWithAdditionalBundleURL:(NSURL *)bundleURL
-{
-  if (bundleURL && !bundleURL.fileURL) { // isHotLoadingAvailable check
-    if (self.bridge) {
-      [self.bridge enqueueJSCall:@"HMRClient"
-                          method:@"registerBundle"
-                            args:@[ [bundleURL absoluteString] ]
-                      completion:NULL];
-    } else {
-      self.invokeJS(@"HMRClient", @"registerBundle", @[ [bundleURL absoluteString] ]);
     }
   }
 }
@@ -467,10 +453,12 @@ RCT_EXPORT_METHOD(addMenuItem : (NSString *)title)
   });
 }
 
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
+- (std::shared_ptr<facebook::react::TurboModule>)
+    getTurboModuleWithJsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+                  nativeInvoker:(std::shared_ptr<facebook::react::CallInvoker>)nativeInvoker
+                     perfLogger:(id<RCTTurboModulePerformanceLogger>)perfLogger
 {
-  return std::make_shared<facebook::react::NativeDevSettingsSpecJSI>(params);
+  return std::make_shared<facebook::react::NativeDevSettingsSpecJSI>(self, jsInvoker, nativeInvoker, perfLogger);
 }
 
 @end
@@ -523,10 +511,7 @@ RCT_EXPORT_METHOD(addMenuItem : (NSString *)title)
 - (void)toggleElementInspector
 {
 }
-- (void)setupHMRClientWithBundleURL:(NSURL *)bundleURL
-{
-}
-- (void)setupHMRClientWithAdditionalBundleURL:(NSURL *)bundleURL
+- (void)setupHotModuleReloadClientIfApplicableForURL:(NSURL *)bundleURL
 {
 }
 - (void)addMenuItem:(NSString *)title
@@ -536,10 +521,12 @@ RCT_EXPORT_METHOD(addMenuItem : (NSString *)title)
 {
 }
 
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
+- (std::shared_ptr<facebook::react::TurboModule>)
+    getTurboModuleWithJsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+                  nativeInvoker:(std::shared_ptr<facebook::react::CallInvoker>)nativeInvoker
+                     perfLogger:(id<RCTTurboModulePerformanceLogger>)perfLogger
 {
-  return std::make_shared<facebook::react::NativeDevSettingsSpecJSI>(params);
+  return std::make_shared<facebook::react::NativeDevSettingsSpecJSI>(self, jsInvoker, nativeInvoker, perfLogger);
 }
 
 @end

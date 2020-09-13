@@ -33,16 +33,12 @@ using namespace facebook::react;
   NSDictionary *_properties;
   CGSize _minimumSize;
   CGSize _maximumSize;
-  CGPoint _viewportOffset;
   CGSize _intrinsicSize;
 
   // The Main thread only
   RCTSurfaceView *_Nullable _view;
   RCTSurfaceTouchHandler *_Nullable _touchHandler;
 }
-
-@synthesize delegate = _delegate;
-@synthesize rootTag = _rootTag;
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
                               moduleName:(NSString *)moduleName
@@ -55,8 +51,8 @@ using namespace facebook::react;
     _rootTag = [RCTAllocateRootViewTag() integerValue];
 
     _minimumSize = CGSizeZero;
-
-    _maximumSize = CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX);
+    // FIXME: Replace with `_maximumSize = CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX);`.
+    _maximumSize = RCTScreenSize();
 
     _touchHandler = [RCTSurfaceTouchHandler new];
 
@@ -201,29 +197,22 @@ using namespace facebook::react;
 
 - (void)setSize:(CGSize)size
 {
-  [self setMinimumSize:size maximumSize:size viewportOffset:_viewportOffset];
+  [self setMinimumSize:size maximumSize:size];
 }
 
-- (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize viewportOffset:(CGPoint)viewportOffset
+- (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
 {
   {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (CGSizeEqualToSize(minimumSize, _minimumSize) && CGSizeEqualToSize(maximumSize, _maximumSize) &&
-        CGPointEqualToPoint(viewportOffset, _viewportOffset)) {
+    if (CGSizeEqualToSize(minimumSize, _minimumSize) && CGSizeEqualToSize(maximumSize, _maximumSize)) {
       return;
     }
 
     _maximumSize = maximumSize;
     _minimumSize = minimumSize;
-    _viewportOffset = viewportOffset;
   }
 
   [_surfacePresenter setMinimumSize:minimumSize maximumSize:maximumSize surface:self];
-}
-
-- (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
-{
-  [self setMinimumSize:minimumSize maximumSize:maximumSize viewportOffset:_viewportOffset];
 }
 
 - (CGSize)minimumSize
@@ -236,12 +225,6 @@ using namespace facebook::react;
 {
   std::lock_guard<std::mutex> lock(_mutex);
   return _maximumSize;
-}
-
-- (CGPoint)viewportOffset
-{
-  std::lock_guard<std::mutex> lock(_mutex);
-  return _viewportOffset;
 }
 
 #pragma mark - intrinsicSize

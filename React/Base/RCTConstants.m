@@ -9,27 +9,3 @@
 
 NSString *const RCTUserInterfaceStyleDidChangeNotification = @"RCTUserInterfaceStyleDidChangeNotification";
 NSString *const RCTUserInterfaceStyleDidChangeNotificationTraitCollectionKey = @"traitCollection";
-
-static BOOL RCTExperimentOnDemandViewMounting = NO;
-
-BOOL RCTExperimentGetOnDemandViewMounting()
-{
-  return RCTExperimentOnDemandViewMounting;
-}
-
-void RCTExperimentSetOnDemandViewMounting(BOOL value)
-{
-  RCTExperimentOnDemandViewMounting = value;
-}
-
-static BOOL RCTExperimentSyncPerformanceFlag = NO;
-
-BOOL RCTExperimentGetSyncPerformanceFlag()
-{
-  return RCTExperimentSyncPerformanceFlag;
-}
-
-void RCTExperimentSetSyncPerformanceFlag(BOOL value)
-{
-  RCTExperimentSyncPerformanceFlag = value;
-}

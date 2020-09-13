@@ -7,7 +7,6 @@
 
 #import "RCTSampleTurboModule.h"
 
-#import <React/RCTUtils.h>
 #import <UIKit/UIKit.h>
 
 using namespace facebook::react;
@@ -18,7 +17,7 @@ using namespace facebook::react;
 RCT_EXPORT_MODULE()
 
 @synthesize bridge = _bridge;
-@synthesize turboModuleRegistry = _turboModuleRegistry;
+@synthesize turboModuleLookupDelegate = _turboModuleLookupDelegate;
 
 // Backward-compatible queue configuration
 + (BOOL)requiresMainQueueSetup
@@ -31,10 +30,12 @@ RCT_EXPORT_MODULE()
   return dispatch_get_main_queue();
 }
 
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
+- (std::shared_ptr<facebook::react::TurboModule>)
+    getTurboModuleWithJsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+                  nativeInvoker:(std::shared_ptr<facebook::react::CallInvoker>)nativeInvoker
+                     perfLogger:(id<RCTTurboModulePerformanceLogger>)perfLogger
 {
-  return std::make_shared<NativeSampleTurboModuleSpecJSI>(params);
+  return std::make_shared<NativeSampleTurboModuleSpecJSI>(self, jsInvoker, nativeInvoker, perfLogger);
 }
 
 // Backward compatible invalidation
@@ -46,19 +47,14 @@ RCT_EXPORT_MODULE()
 
 - (NSDictionary *)getConstants
 {
-  __block NSDictionary *constants;
-  RCTUnsafeExecuteOnMainQueueSync(^{
-    UIScreen *mainScreen = UIScreen.mainScreen;
-    CGSize screenSize = mainScreen.bounds.size;
+  UIScreen *mainScreen = UIScreen.mainScreen;
+  CGSize screenSize = mainScreen.bounds.size;
 
-    constants = @{
-      @"const1" : @YES,
-      @"const2" : @(screenSize.width),
-      @"const3" : @"something",
-    };
-  });
-
-  return constants;
+  return @{
+    @"const1" : @YES,
+    @"const2" : @(screenSize.width),
+    @"const3" : @"something",
+  };
 }
 
 // TODO: Remove once fully migrated to TurboModule.
@@ -95,11 +91,6 @@ RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray<id<NSObject>> *, getArray : (NSArray
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getObject : (NSDictionary *)arg)
 {
   return arg;
-}
-
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSNumber *, getRootTag : (double)arg)
-{
-  return @(arg);
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getValue : (double)x y : (NSString *)y z : (NSDictionary *)z)

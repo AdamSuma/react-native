@@ -10,11 +10,13 @@
 
 'use strict';
 
-import Platform from '../Utilities/Platform';
-import EventEmitter from '../vendor/emitter/EventEmitter';
-import {type EventSubscription} from '../vendor/emitter/EventEmitter';
-import RCTDeviceEventEmitter from './RCTDeviceEventEmitter';
-import invariant from 'invariant';
+const EventEmitter = require('../vendor/emitter/EventEmitter');
+const Platform = require('../Utilities/Platform');
+const RCTDeviceEventEmitter = require('./RCTDeviceEventEmitter');
+
+const invariant = require('invariant');
+
+import type EmitterSubscription from '../vendor/emitter/EmitterSubscription';
 
 type NativeModule = {
   +addListener: (eventType: string) => void,
@@ -26,7 +28,7 @@ type NativeModule = {
  * Abstract base class for implementing event-emitting modules. This implements
  * a subset of the standard EventEmitter node module API.
  */
-export default class NativeEventEmitter extends EventEmitter {
+class NativeEventEmitter extends EventEmitter {
   _nativeModule: ?NativeModule;
 
   constructor(nativeModule: ?NativeModule) {
@@ -41,7 +43,7 @@ export default class NativeEventEmitter extends EventEmitter {
     eventType: string,
     listener: Function,
     context: ?Object,
-  ): EventSubscription {
+  ): EmitterSubscription {
     if (this._nativeModule != null) {
       this._nativeModule.addListener(eventType);
     }
@@ -50,17 +52,19 @@ export default class NativeEventEmitter extends EventEmitter {
 
   removeAllListeners(eventType: string) {
     invariant(eventType, 'eventType argument is required.');
-    const count = this.listenerCount(eventType);
+    const count = this.listeners(eventType).length;
     if (this._nativeModule != null) {
       this._nativeModule.removeListeners(count);
     }
     super.removeAllListeners(eventType);
   }
 
-  removeSubscription(subscription: EventSubscription) {
+  removeSubscription(subscription: EmitterSubscription) {
     if (this._nativeModule != null) {
       this._nativeModule.removeListeners(1);
     }
     super.removeSubscription(subscription);
   }
 }
+
+module.exports = NativeEventEmitter;

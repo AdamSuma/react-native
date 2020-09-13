@@ -47,7 +47,6 @@ module.exports = {
         dev: true,
         enableBabelRuntime: false,
         experimentalImportSupport: false,
-        globalPrefix: '',
         hot: false,
         inlineRequires: true,
         minify: false,

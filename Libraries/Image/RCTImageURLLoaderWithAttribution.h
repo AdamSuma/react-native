@@ -6,8 +6,6 @@
  */
 
 #import <React/RCTImageURLLoader.h>
-#import <React/RCTImageLoaderProtocol.h>
-#import <React/RCTImageLoaderInstrumentableProtocol.h>
 
 // TODO (T61325135): Remove C++ checks
 #ifdef __cplusplus
@@ -17,7 +15,6 @@ namespace react {
 struct ImageURLLoaderAttribution {
   int32_t nativeViewTag = 0;
   int32_t surfaceId = 0;
-  NSString *analyticTag;
 };
 
 } // namespace react
@@ -39,7 +36,7 @@ struct ImageURLLoaderAttribution {
  * Same as the RCTImageURLLoader interface, but allows passing in optional `attribution` information.
  * This is useful for per-app logging and other instrumentation.
  */
-@protocol RCTImageURLLoaderWithAttribution <RCTImageURLLoader, RCTImageLoaderInstrumentableProtocol>
+@protocol RCTImageURLLoaderWithAttribution <RCTImageURLLoader>
 
 // TODO (T61325135): Remove C++ checks
 #ifdef __cplusplus
@@ -52,11 +49,10 @@ struct ImageURLLoaderAttribution {
                                         scale:(CGFloat)scale
                                    resizeMode:(RCTResizeMode)resizeMode
                                     requestId:(NSString *)requestId
-                                    priority: (RCTImageLoaderPriority)priority
                                   attribution:(const facebook::react::ImageURLLoaderAttribution &)attribution
                               progressHandler:(RCTImageLoaderProgressBlock)progressHandler
                            partialLoadHandler:(RCTImageLoaderPartialLoadBlock)partialLoadHandler
-                            completionHandler:(RCTImageLoaderCompletionBlockWithMetadata)completionHandler;
+                            completionHandler:(RCTImageLoaderCompletionBlock)completionHandler;
 #endif
 
 /**
@@ -68,11 +64,6 @@ struct ImageURLLoaderAttribution {
  * Image instrumentation - start tracking the on-screen visibility of the native image view.
  */
 - (void)trackURLImageVisibilityForRequest:(RCTImageURLLoaderRequest *)loaderRequest imageView:(UIView *)imageView;
-
-/**
- * Image instrumentation - notify that the request was destroyed.
- */
-- (void)trackURLImageRequestDidDestroy:(RCTImageURLLoaderRequest *)loaderRequest;
 
 /**
  * Image instrumentation - notify that the native image view was destroyed.

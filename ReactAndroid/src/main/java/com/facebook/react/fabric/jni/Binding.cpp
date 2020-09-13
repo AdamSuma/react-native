@@ -11,24 +11,23 @@
 #include "ReactNativeConfigHolder.h"
 #include "StateWrapperImpl.h"
 
-#include <better/set.h>
+#import <better/set.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <react/renderer/animations/LayoutAnimationDriver.h>
-#include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
-#include <react/renderer/components/scrollview/ScrollViewProps.h>
-#include <react/renderer/core/EventBeat.h>
-#include <react/renderer/core/EventEmitter.h>
-#include <react/renderer/core/conversions.h>
-#include <react/renderer/debug/SystraceSection.h>
-#include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/scheduler/SchedulerDelegate.h>
-#include <react/renderer/scheduler/SchedulerToolbox.h>
-#include <react/renderer/uimanager/primitives.h>
+#include <react/components/scrollview/ScrollViewProps.h>
+#include <react/core/EventBeat.h>
+#include <react/core/EventEmitter.h>
+#include <react/core/conversions.h>
+#include <react/debug/SystraceSection.h>
+#include <react/uimanager/ComponentDescriptorFactory.h>
+#include <react/uimanager/Scheduler.h>
+#include <react/uimanager/SchedulerDelegate.h>
+#include <react/uimanager/SchedulerToolbox.h>
+#include <react/uimanager/primitives.h>
 #include <react/utils/ContextContainer.h>
 
-#include <glog/logging.h>
+#include <Glog/logging.h>
 
 using namespace facebook::jni;
 using namespace facebook::jsi;
@@ -42,6 +41,9 @@ struct JMountItem : public JavaClass<JMountItem> {
   static constexpr auto kJavaDescriptor =
       "Lcom/facebook/react/fabric/mounting/mountitems/MountItem;";
 };
+
+static constexpr auto UIManagerJavaDescriptor =
+    "com/facebook/react/fabric/FabricUIManager";
 
 struct RemoveDeleteMetadata {
   Tag tag;
@@ -89,8 +91,7 @@ void Binding::startSurface(
       moduleName->toStdString(),
       initialProps->consume(),
       {},
-      context,
-      animationDriver_);
+      context);
 }
 
 void Binding::startSurfaceWithConstraints(
@@ -101,17 +102,12 @@ void Binding::startSurfaceWithConstraints(
     jfloat maxWidth,
     jfloat minHeight,
     jfloat maxHeight,
-    jfloat offsetX,
-    jfloat offsetY,
     jboolean isRTL,
     jboolean doLeftAndRightSwapInRTL) {
   SystraceSection s("FabricUIManagerBinding::startSurfaceWithConstraints");
 
-  if (enableFabricLogs_) {
-    LOG(WARNING)
-        << "Binding::startSurfaceWithConstraints() was called (address: "
-        << this << ", surfaceId: " << surfaceId << ").";
-  }
+  LOG(WARNING) << "Binding::startSurfaceWithConstraints() was called (address: "
+               << this << ", surfaceId: " << surfaceId << ").";
 
   std::shared_ptr<Scheduler> scheduler = getScheduler();
   if (!scheduler) {
@@ -125,8 +121,6 @@ void Binding::startSurfaceWithConstraints(
       Size{maxWidth / pointScaleFactor_, maxHeight / pointScaleFactor_};
 
   LayoutContext context;
-  context.viewportOffset =
-      Point{offsetX / pointScaleFactor_, offsetY / pointScaleFactor_};
   context.pointScaleFactor = {pointScaleFactor_};
   context.swapLeftAndRightInRTL = doLeftAndRightSwapInRTL;
   LayoutConstraints constraints = {};
@@ -140,8 +134,7 @@ void Binding::startSurfaceWithConstraints(
       moduleName->toStdString(),
       initialProps->consume(),
       constraints,
-      context,
-      animationDriver_);
+      context);
 }
 
 void Binding::renderTemplateToSurface(jint surfaceId, jstring uiTemplate) {
@@ -162,10 +155,8 @@ void Binding::renderTemplateToSurface(jint surfaceId, jstring uiTemplate) {
 void Binding::stopSurface(jint surfaceId) {
   SystraceSection s("FabricUIManagerBinding::stopSurface");
 
-  if (enableFabricLogs_) {
-    LOG(WARNING) << "Binding::stopSurface() was called (address: " << this
-                 << ", surfaceId: " << surfaceId << ").";
-  }
+  LOG(WARNING) << "Binding::stopSurface() was called (address: " << this
+               << ", surfaceId: " << surfaceId << ").";
 
   std::shared_ptr<Scheduler> scheduler = getScheduler();
   if (!scheduler) {
@@ -182,8 +173,6 @@ void Binding::setConstraints(
     jfloat maxWidth,
     jfloat minHeight,
     jfloat maxHeight,
-    jfloat offsetX,
-    jfloat offsetY,
     jboolean isRTL,
     jboolean doLeftAndRightSwapInRTL) {
   SystraceSection s("FabricUIManagerBinding::setConstraints");
@@ -200,8 +189,6 @@ void Binding::setConstraints(
       Size{maxWidth / pointScaleFactor_, maxHeight / pointScaleFactor_};
 
   LayoutContext context;
-  context.viewportOffset =
-      Point{offsetX / pointScaleFactor_, offsetY / pointScaleFactor_};
   context.pointScaleFactor = {pointScaleFactor_};
   context.swapLeftAndRightInRTL = doLeftAndRightSwapInRTL;
   LayoutConstraints constraints = {};
@@ -214,24 +201,16 @@ void Binding::setConstraints(
 }
 
 void Binding::installFabricUIManager(
-    jni::alias_ref<JRuntimeExecutor::javaobject> runtimeExecutorHolder,
+    jlong jsContextNativePointer,
     jni::alias_ref<jobject> javaUIManager,
     EventBeatManager *eventBeatManager,
     jni::alias_ref<JavaMessageQueueThread::javaobject> jsMessageQueueThread,
-    ComponentFactory *componentsRegistry,
+    ComponentFactoryDelegate *componentsRegistry,
     jni::alias_ref<jobject> reactNativeConfig) {
   SystraceSection s("FabricUIManagerBinding::installFabricUIManager");
 
-  std::shared_ptr<const ReactNativeConfig> config =
-      std::make_shared<const ReactNativeConfigHolder>(reactNativeConfig);
-
-  enableFabricLogs_ =
-      config->getBool("react_fabric:enabled_android_fabric_logs");
-
-  if (enableFabricLogs_) {
-    LOG(WARNING) << "Binding::installFabricUIManager() was called (address: "
-                 << this << ").";
-  }
+  LOG(WARNING) << "Binding::installFabricUIManager() was called (address: "
+               << this << ").";
 
   // Use std::lock and std::adopt_lock to prevent deadlocks by locking mutexes
   // at the same time
@@ -247,7 +226,16 @@ void Binding::installFabricUIManager(
 
   auto sharedJSMessageQueueThread =
       std::make_shared<JMessageQueueThread>(jsMessageQueueThread);
-  auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
+
+  Runtime *runtime = (Runtime *)jsContextNativePointer;
+  RuntimeExecutor runtimeExecutor =
+      [runtime, sharedJSMessageQueueThread](
+          std::function<void(facebook::jsi::Runtime & runtime)> &&callback) {
+        sharedJSMessageQueueThread->runOnQueue(
+            [runtime, callback = std::move(callback)]() {
+              callback(*runtime);
+            });
+      };
 
   // TODO: T31905686 Create synchronous Event Beat
   jni::global_ref<jobject> localJavaUIManager = javaUIManager_;
@@ -265,24 +253,26 @@ void Binding::installFabricUIManager(
             ownerBox, eventBeatManager, runtimeExecutor, localJavaUIManager);
       };
 
+  std::shared_ptr<const ReactNativeConfig> config =
+      std::make_shared<const ReactNativeConfigHolder>(reactNativeConfig);
   contextContainer->insert("ReactNativeConfig", config);
   contextContainer->insert("FabricUIManager", javaUIManager_);
 
   // Keep reference to config object and cache some feature flags here
   reactNativeConfig_ = config;
-  collapseDeleteCreateMountingInstructions_ =
-      reactNativeConfig_->getBool(
-          "react_fabric:enabled_collapse_delete_create_mounting_instructions") &&
-      !reactNativeConfig_->getBool(
-          "react_fabric:enable_reparenting_detection_android") &&
-      !reactNativeConfig_->getBool(
-          "react_fabric:enabled_layout_animations_android");
+  shouldCollateRemovesAndDeletes_ = reactNativeConfig_->getBool(
+      "react_fabric:enable_removedelete_collation_android");
+  collapseDeleteCreateMountingInstructions_ = reactNativeConfig_->getBool(
+      "react_fabric:enabled_collapse_delete_create_mounting_instructions");
+
+  disableVirtualNodePreallocation_ = reactNativeConfig_->getBool(
+      "react_fabric:disable_virtual_node_preallocation");
 
   disablePreallocateViews_ = reactNativeConfig_->getBool(
       "react_fabric:disabled_view_preallocation_android");
 
-  bool enableLayoutAnimations = reactNativeConfig_->getBool(
-      "react_fabric:enabled_layout_animations_android");
+  enableOptimizedMovesDiffer_ = reactNativeConfig_->getBool(
+      "react_fabric:enabled_optimized_moves_differ_android");
 
   auto toolbox = SchedulerToolbox{};
   toolbox.contextContainer = contextContainer;
@@ -290,26 +280,12 @@ void Binding::installFabricUIManager(
   toolbox.runtimeExecutor = runtimeExecutor;
   toolbox.synchronousEventBeatFactory = synchronousBeatFactory;
   toolbox.asynchronousEventBeatFactory = asynchronousBeatFactory;
-
-  if (reactNativeConfig_->getBool(
-          "react_fabric:enable_background_executor_android")) {
-    backgroundExecutor_ = std::make_unique<JBackgroundExecutor>();
-    toolbox.backgroundExecutor = backgroundExecutor_->get();
-  }
-
-  if (enableLayoutAnimations) {
-    animationDriver_ =
-        std::make_shared<LayoutAnimationDriver>(runtimeExecutor, this);
-  }
-  scheduler_ = std::make_shared<Scheduler>(
-      toolbox, (animationDriver_ ? animationDriver_.get() : nullptr), this);
+  scheduler_ = std::make_shared<Scheduler>(toolbox, this);
 }
 
 void Binding::uninstallFabricUIManager() {
-  if (enableFabricLogs_) {
-    LOG(WARNING) << "Binding::uninstallFabricUIManager() was called (address: "
-                 << this << ").";
-  }
+  LOG(WARNING) << "Binding::uninstallFabricUIManager() was called (address: "
+               << this << ").";
   // Use std::lock and std::adopt_lock to prevent deadlocks by locking mutexes
   // at the same time
   std::lock(schedulerMutex_, javaUIManagerMutex_);
@@ -317,7 +293,6 @@ void Binding::uninstallFabricUIManager() {
   std::lock_guard<std::mutex> uiManagerLock(
       javaUIManagerMutex_, std::adopt_lock);
 
-  animationDriver_ = nullptr;
   scheduler_ = nullptr;
   javaUIManager_ = nullptr;
   reactNativeConfig_ = nullptr;
@@ -363,7 +338,7 @@ local_ref<JMountItem::javaobject> createUpdateEventEmitterMountItem(
   cEventEmitter->eventEmitter = eventEmitter;
 
   static auto updateEventEmitterInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jint, jobject)>(
               "updateEventEmitterMountItem");
 
@@ -384,7 +359,7 @@ local_ref<JMountItem::javaobject> createUpdatePropsMountItem(
   local_ref<ReadableMap::javaobject> readableMap =
       castReadableMap(ReadableNativeMap::newObjectCxxArgs(newProps));
   static auto updatePropsInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jint, ReadableMap::javaobject)>(
               "updatePropsMountItem");
 
@@ -401,7 +376,7 @@ local_ref<JMountItem::javaobject> createUpdateLayoutMountItem(
   if (newChildShadowView.layoutMetrics != EmptyLayoutMetrics &&
       oldChildShadowView.layoutMetrics != newChildShadowView.layoutMetrics) {
     static auto updateLayoutInstruction =
-        jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+        jni::findClassStatic(UIManagerJavaDescriptor)
             ->getMethod<alias_ref<JMountItem>(
                 jint, jint, jint, jint, jint, jint)>("updateLayoutMountItem");
     auto layoutMetrics = newChildShadowView.layoutMetrics;
@@ -433,7 +408,7 @@ local_ref<JMountItem::javaobject> createUpdatePaddingMountItem(
   }
 
   static auto updateLayoutInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jint, jint, jint, jint, jint)>(
               "updatePaddingMountItem");
 
@@ -454,7 +429,7 @@ local_ref<JMountItem::javaobject> createInsertMountItem(
     const jni::global_ref<jobject> &javaUIManager,
     const ShadowViewMutation &mutation) {
   static auto insertInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jint, jint, jint)>(
               "insertMountItem");
 
@@ -469,7 +444,7 @@ local_ref<JMountItem::javaobject> createUpdateStateMountItem(
     const jni::global_ref<jobject> &javaUIManager,
     const ShadowViewMutation &mutation) {
   static auto updateStateInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jint, jobject)>(
               "updateStateMountItem");
 
@@ -491,6 +466,31 @@ local_ref<JMountItem::javaobject> createUpdateStateMountItem(
       (javaStateWrapper != nullptr ? javaStateWrapper.get() : nullptr));
 }
 
+local_ref<JMountItem::javaobject> createRemoveMountItem(
+    const jni::global_ref<jobject> &javaUIManager,
+    const ShadowViewMutation &mutation) {
+  static auto removeInstruction =
+      jni::findClassStatic(UIManagerJavaDescriptor)
+          ->getMethod<alias_ref<JMountItem>(jint, jint, jint)>(
+              "removeMountItem");
+
+  return removeInstruction(
+      javaUIManager,
+      mutation.oldChildShadowView.tag,
+      mutation.parentShadowView.tag,
+      mutation.index);
+}
+
+local_ref<JMountItem::javaobject> createDeleteMountItem(
+    const jni::global_ref<jobject> &javaUIManager,
+    const ShadowViewMutation &mutation) {
+  static auto deleteInstruction =
+      jni::findClassStatic(UIManagerJavaDescriptor)
+          ->getMethod<alias_ref<JMountItem>(jint)>("deleteMountItem");
+
+  return deleteInstruction(javaUIManager, mutation.oldChildShadowView.tag);
+}
+
 local_ref<JMountItem::javaobject> createRemoveAndDeleteMultiMountItem(
     const jni::global_ref<jobject> &javaUIManager,
     const std::vector<RemoveDeleteMetadata> &metadata) {
@@ -508,7 +508,7 @@ local_ref<JMountItem::javaobject> createRemoveAndDeleteMultiMountItem(
   }
 
   static auto removeDeleteMultiInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(jintArray)>(
               "removeDeleteMultiMountItem");
 
@@ -533,7 +533,7 @@ local_ref<JMountItem::javaobject> createCreateMountItem(
     const ShadowViewMutation &mutation,
     const Tag surfaceId) {
   static auto createJavaInstruction =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(
               jstring, ReadableMap::javaobject, jobject, jint, jint, jboolean)>(
               "createMountItem");
@@ -583,7 +583,9 @@ void Binding::schedulerDidFinishTransaction(
     return;
   }
 
-  auto mountingTransaction = mountingCoordinator->pullTransaction();
+  auto mountingTransaction = mountingCoordinator->pullTransaction(
+      enableOptimizedMovesDiffer_ ? DifferentiatorMode::OptimizedMoves
+                                  : DifferentiatorMode::Classic);
 
   if (!mountingTransaction.has_value()) {
     return;
@@ -619,8 +621,7 @@ void Binding::schedulerDidFinishTransaction(
       }
     }
   }
-
-  auto revisionNumber = telemetry.getRevisionNumber();
+  int64_t commitNumber = telemetry.getCommitNumber();
 
   std::vector<local_ref<jobject>> queue;
   // Upper bound estimation of mount items to be delivered to Java side.
@@ -661,7 +662,8 @@ void Binding::schedulerDidFinishTransaction(
         oldChildShadowView.layoutMetrics == EmptyLayoutMetrics;
 
     // Handle accumulated removals/deletions
-    if (mutation.type != ShadowViewMutation::Remove &&
+    if (shouldCollateRemovesAndDeletes_ &&
+        mutation.type != ShadowViewMutation::Remove &&
         mutation.type != ShadowViewMutation::Delete) {
       if (toRemove.size() > 0) {
         mountItems[position++] =
@@ -683,29 +685,39 @@ void Binding::schedulerDidFinishTransaction(
       }
       case ShadowViewMutation::Remove: {
         if (!isVirtual) {
-          toRemove.push_back(
-              RemoveDeleteMetadata{mutation.oldChildShadowView.tag,
-                                   mutation.parentShadowView.tag,
-                                   mutation.index,
-                                   true,
-                                   false});
+          if (shouldCollateRemovesAndDeletes_) {
+            toRemove.push_back(
+                RemoveDeleteMetadata{mutation.oldChildShadowView.tag,
+                                     mutation.parentShadowView.tag,
+                                     mutation.index,
+                                     true,
+                                     false});
+          } else {
+            mountItems[position++] =
+                createRemoveMountItem(localJavaUIManager, mutation);
+          }
         }
         break;
       }
       case ShadowViewMutation::Delete: {
-        // It is impossible to delete without removing node first
-        const auto &it = std::find_if(
-            std::begin(toRemove),
-            std::end(toRemove),
-            [&mutation](const auto &x) {
-              return x.tag == mutation.oldChildShadowView.tag;
-            });
+        if (shouldCollateRemovesAndDeletes_) {
+          // It is impossible to delete without removing node first
+          const auto &it = std::find_if(
+              std::begin(toRemove),
+              std::end(toRemove),
+              [&mutation](const auto &x) {
+                return x.tag == mutation.oldChildShadowView.tag;
+              });
 
-        if (it != std::end(toRemove)) {
-          it->shouldDelete = true;
+          if (it != std::end(toRemove)) {
+            it->shouldDelete = true;
+          } else {
+            toRemove.push_back(RemoveDeleteMetadata{
+                mutation.oldChildShadowView.tag, -1, -1, false, true});
+          }
         } else {
-          toRemove.push_back(RemoveDeleteMetadata{
-              mutation.oldChildShadowView.tag, -1, -1, false, true});
+          mountItems[position++] =
+              createDeleteMountItem(localJavaUIManager, mutation);
         }
 
         deletedViewTags.insert(mutation.oldChildShadowView.tag);
@@ -724,20 +736,16 @@ void Binding::schedulerDidFinishTransaction(
                 createUpdateStateMountItem(localJavaUIManager, mutation);
           }
 
-          // Padding: padding mountItems must be executed before layout props
-          // are updated in the view. This is necessary to ensure that events
-          // (resulting from layout changes) are dispatched with the correct
-          // padding information.
-          auto updatePaddingMountItem =
-              createUpdatePaddingMountItem(localJavaUIManager, mutation);
-          if (updatePaddingMountItem) {
-            mountItems[position++] = updatePaddingMountItem;
-          }
-
           auto updateLayoutMountItem =
               createUpdateLayoutMountItem(localJavaUIManager, mutation);
           if (updateLayoutMountItem) {
             mountItems[position++] = updateLayoutMountItem;
+          }
+
+          auto updatePaddingMountItem =
+              createUpdatePaddingMountItem(localJavaUIManager, mutation);
+          if (updatePaddingMountItem) {
+            mountItems[position++] = updatePaddingMountItem;
           }
         }
 
@@ -771,21 +779,18 @@ void Binding::schedulerDidFinishTransaction(
                 createUpdateStateMountItem(localJavaUIManager, mutation);
           }
 
-          // Padding: padding mountItems must be executed before layout props
-          // are updated in the view. This is necessary to ensure that events
-          // (resulting from layout changes) are dispatched with the correct
-          // padding information.
-          auto updatePaddingMountItem =
-              createUpdatePaddingMountItem(localJavaUIManager, mutation);
-          if (updatePaddingMountItem) {
-            mountItems[position++] = updatePaddingMountItem;
-          }
-
           // Layout
           auto updateLayoutMountItem =
               createUpdateLayoutMountItem(localJavaUIManager, mutation);
           if (updateLayoutMountItem) {
             mountItems[position++] = updateLayoutMountItem;
+          }
+
+          // Padding
+          auto updatePaddingMountItem =
+              createUpdatePaddingMountItem(localJavaUIManager, mutation);
+          if (updatePaddingMountItem) {
+            mountItems[position++] = updatePaddingMountItem;
           }
         }
 
@@ -805,46 +810,45 @@ void Binding::schedulerDidFinishTransaction(
   }
 
   // Handle remaining removals and deletions
-  if (toRemove.size() > 0) {
+  if (shouldCollateRemovesAndDeletes_ && toRemove.size() > 0) {
     mountItems[position++] =
         createRemoveAndDeleteMultiMountItem(localJavaUIManager, toRemove);
     toRemove.clear();
   }
 
+  if (position <= 0) {
+    // If there are no mountItems to be sent to the platform, then it is not
+    // necessary to even call.
+    return;
+  }
+
   static auto createMountItemsBatchContainer =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<alias_ref<JMountItem>(
-              jint, jtypeArray<JMountItem::javaobject>, jint, jint)>(
+              jtypeArray<JMountItem::javaobject>, jint, jint)>(
               "createBatchMountItem");
 
-  // If there are no items, we pass a nullptr instead of passing the object
-  // through the JNI
   auto batch = createMountItemsBatchContainer(
-      localJavaUIManager,
-      surfaceId,
-      position == 0 ? nullptr : mountItemsArray.get(),
-      position,
-      revisionNumber);
+      localJavaUIManager, mountItemsArray.get(), position, commitNumber);
 
-  static auto scheduleMountItem =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
-          ->getMethod<void(
-              JMountItem::javaobject,
-              jint,
-              jlong,
-              jlong,
-              jlong,
-              jlong,
-              jlong,
-              jlong,
-              jlong)>("scheduleMountItem");
+  static auto scheduleMountItem = jni::findClassStatic(UIManagerJavaDescriptor)
+                                      ->getMethod<void(
+                                          JMountItem::javaobject,
+                                          jint,
+                                          jlong,
+                                          jlong,
+                                          jlong,
+                                          jlong,
+                                          jlong,
+                                          jlong,
+                                          jlong)>("scheduleMountItem");
 
   auto finishTransactionEndTime = telemetryTimePointNow();
 
   scheduleMountItem(
       localJavaUIManager,
       batch.get(),
-      telemetry.getRevisionNumber(),
+      telemetry.getCommitNumber(),
       telemetryTimePointToMilliseconds(telemetry.getCommitStartTime()),
       telemetryTimePointToMilliseconds(telemetry.getDiffStartTime()),
       telemetryTimePointToMilliseconds(telemetry.getDiffEndTime()),
@@ -856,37 +860,6 @@ void Binding::schedulerDidFinishTransaction(
 
 void Binding::setPixelDensity(float pointScaleFactor) {
   pointScaleFactor_ = pointScaleFactor;
-}
-
-void Binding::onAnimationStarted() {
-  jni::global_ref<jobject> localJavaUIManager = getJavaUIManager();
-  if (!localJavaUIManager) {
-    LOG(ERROR) << "Binding::animationsStarted: JavaUIManager disappeared";
-    return;
-  }
-
-  static auto layoutAnimationsStartedJNI =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
-          ->getMethod<void()>("onAnimationStarted");
-
-  layoutAnimationsStartedJNI(localJavaUIManager);
-}
-void Binding::onAllAnimationsComplete() {
-  jni::global_ref<jobject> localJavaUIManager = getJavaUIManager();
-  if (!localJavaUIManager) {
-    LOG(ERROR) << "Binding::allAnimationsComplete: JavaUIManager disappeared";
-    return;
-  }
-
-  static auto allAnimationsCompleteJNI =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
-          ->getMethod<void()>("onAllAnimationsComplete");
-
-  allAnimationsCompleteJNI(localJavaUIManager);
-}
-
-void Binding::driveCxxAnimations() {
-  scheduler_->animationTick();
 }
 
 void Binding::schedulerDidRequestPreliminaryViewAllocation(
@@ -910,7 +883,7 @@ void Binding::schedulerDidRequestPreliminaryViewAllocation(
   }
 
   static auto preallocateView =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<void(
               jint, jint, jstring, ReadableMap::javaobject, jobject, jboolean)>(
               "preallocateView");
@@ -951,7 +924,7 @@ void Binding::schedulerDidDispatchCommand(
   }
 
   static auto dispatchCommand =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<void(jint, jstring, ReadableArray::javaobject)>(
               "dispatchCommand");
 
@@ -976,7 +949,7 @@ void Binding::schedulerDidSetJSResponder(
   }
 
   static auto setJSResponder =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
+      jni::findClassStatic(UIManagerJavaDescriptor)
           ->getMethod<void(jint, jint, jboolean)>("setJSResponder");
 
   setJSResponder(
@@ -994,9 +967,8 @@ void Binding::schedulerDidClearJSResponder() {
     return;
   }
 
-  static auto clearJSResponder =
-      jni::findClassStatic(Binding::UIManagerJavaDescriptor)
-          ->getMethod<void()>("clearJSResponder");
+  static auto clearJSResponder = jni::findClassStatic(UIManagerJavaDescriptor)
+                                     ->getMethod<void()>("clearJSResponder");
 
   clearJSResponder(localJavaUIManager);
 }
@@ -1014,7 +986,6 @@ void Binding::registerNatives() {
        makeNativeMethod("stopSurface", Binding::stopSurface),
        makeNativeMethod("setConstraints", Binding::setConstraints),
        makeNativeMethod("setPixelDensity", Binding::setPixelDensity),
-       makeNativeMethod("driveCxxAnimations", Binding::driveCxxAnimations),
        makeNativeMethod(
            "uninstallFabricUIManager", Binding::uninstallFabricUIManager)});
 }
